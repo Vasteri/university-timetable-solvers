@@ -1,0 +1,43 @@
+<mxfile host="65bd71144e">
+    <diagram name="Архитектура" id="0">
+        <mxGraphModel dx="890" dy="454" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="win_client" value="Клиенты C++ Qt (Windows)" style="shape=rectangle;whiteSpace=wrap;rounded=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
+                    <mxGeometry x="80" y="120" width="200" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="android_client" value="Клиенты C++ Qt (Android)" style="shape=rectangle;whiteSpace=wrap;rounded=1;fillColor=#d5e8d4;strokeColor=#82b366;" parent="1" vertex="1">
+                    <mxGeometry x="80" y="280" width="200" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="server" value="" style="shape=rectangle;whiteSpace=wrap;rounded=1;fillColor=#ffe6cc;strokeColor=#d79b00;" parent="1" vertex="1">
+                    <mxGeometry x="410" y="70" width="450" height="300" as="geometry"/>
+                </mxCell>
+                <mxCell id="docker" value="" style="shape=rectangle;whiteSpace=wrap;rounded=1;fillColor=#f8cecc;strokeColor=#b85450;" parent="server" vertex="1">
+                    <mxGeometry x="20" y="50" width="410" height="230" as="geometry"/>
+                </mxCell>
+                <mxCell id="2" value="&lt;span style=&quot;color: rgb(0, 0, 0);&quot;&gt;Сервер (отдельный компьютер)&lt;/span&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="server">
+                    <mxGeometry x="132.5" y="10" width="185" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="3" value="&lt;span style=&quot;color: rgb(0, 0, 0);&quot;&gt;Docker контейнер (содержит Python микросервис и библиотеки на C++)&lt;/span&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="server">
+                    <mxGeometry x="102.5" y="60" width="245" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="microservice" value="Микросервис Python" style="shape=rectangle;whiteSpace=wrap;rounded=1;fillColor=#fff2cc;strokeColor=#d6b656;" parent="server" vertex="1">
+                    <mxGeometry x="40" y="105" width="370" height="155" as="geometry"/>
+                </mxCell>
+                <mxCell id="arrow1" style="endArrow=block;strokeColor=#000000;" parent="1" source="win_client" target="server" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="arrow2" style="endArrow=block;strokeColor=#000000;" parent="1" source="android_client" target="server" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="label1" value="REST API" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;" parent="1" vertex="1">
+                    <mxGeometry x="300" y="140" width="80" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="label2" value="REST API" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;" parent="1" vertex="1">
+                    <mxGeometry x="300" y="300" width="80" height="30" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>
