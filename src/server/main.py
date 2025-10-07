@@ -1,0 +1,135 @@
+from pulp import LpProblem, LpMinimize, LpVariable, lpSum, LpStatus
+from collections import defaultdict
+import pandas as pd
+
+
+# Количество занятий по предметам для каждой группы в неделю
+subject_count = {
+    ("A-18-30", "math"): 2,
+    ("A-16-30", "math"): 1,
+}
+
+default_count = 2
+
+
+
+# Исходные множества
+groups = ["A-02-30", "A-05-30", "A-08-30", "A-16-30", "A-18-30"]
+subjects = ["math", "physics", "english", "IT", "economic"]
+teachers = ["T1", "T2", "T3", "T4", "T5", "T6", "T7"]  
+rooms = ["m700", "m707", "m200"]
+days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"] 
+times = ["9:20", "11:10", "13:45", "15:35"] 
+
+# Назначение преподавателей на предметы
+subject_teachers = {
+    "math": ["T1"],
+    "physics": ["T2"],
+    "english": ["T3"],
+    "economic": ["T4"],
+    "IT": ["T5", "T6", "T7"]
+}
+
+total_required_pairs = sum(subject_count.get((g, s), default_count) for g in groups for s in subjects)
+print("Обязательных пар в неделю:", total_required_pairs)
+
+# Создаём модель
+prob = LpProblem("University_Timetable", LpMinimize)
+
+# Переменные:
+# x[g,s,d,t,r,tea] == 1, если группа g на предмете s назначена в (d,t) в аудитории r у преподавателя tea
+x = {}
+for g in groups:
+    for d in days:
+        for tt in times:
+            for r in rooms:
+                for s in subjects:
+                    allowed_teachers = subject_teachers[s]
+                    for tea in allowed_teachers:
+                        varname = f"x_{g}_{d}_{tt}_{r}_{s}_{tea}"
+                        x[(g, s, d, tt, r, tea)] = LpVariable(varname, cat="Binary")
+
+# Целевая функция
+prob += lpSum([])  # нулевая целевая функция
+
+# Ограничения
+
+# 1) Для всех (g, s) задать нужное количество занятий в неделю
+for g in groups:
+    for s in subjects:
+        count = subject_count.get((g, s), default_count)
+        prob += lpSum(
+            x[(g, s, d, tt, r, tea)]
+            for d in days for tt in times for r in rooms for tea in subject_teachers[s]
+        ) == count, f"Num_slots_for_{g}_{s}"
+
+
+# 2) Для каждого (day, time_slot, room) не более 1 занятия
+for d in days:
+    for tt in times:
+        for r in rooms:
+            prob += lpSum(
+                x[(g, s, d, tt, r, tea)]
+                for g in groups for s in subjects for tea in subject_teachers[s]
+            ) <= 1, f"Room_one_{d}_{tt}_{r}"
+
+# 3) Для каждого преподавателя в (day, time_slot) не более 1 занятия
+for tea in teachers:
+    for d in days:
+        for tt in times:
+            prob += lpSum(
+                x[(g, s, d, tt, r, tea)]
+                for g in groups for s in subjects if tea in subject_teachers[s] for r in rooms
+            ) <= 1, f"Teacher_one_{tea}_{d}_{tt}"
+
+# 4) Для каждой группы в (day, time_slot) не более 1 занятия
+for g in groups:
+    for d in days:
+        for tt in times:
+            prob += lpSum(
+                x[(g, s, d, tt, r, tea)]
+                for s in subjects for r in rooms for tea in subject_teachers[s]
+            ) <= 1, f"Group_one_{g}_{d}_{tt}"
+
+
+print("Solving...")
+status = prob.solve()
+print("Status:", LpStatus[prob.status])
+
+# Сбор результата — читаем назначенные переменные
+assigned = []
+for key, var in x.items():
+    if var.varValue is not None and var.varValue > 0.5:
+        g, s, d, tt, r, tea = key
+        assigned.append((g, s, d, tt, r, tea))
+
+# Проверка количества назначений
+print("Назначено пар:", len(assigned))
+if len(assigned) != total_required_pairs:
+    print("Внимание: назначено пар не совпадает с требуемым числом!")
+
+
+for (g, s, d, tt, r, tea) in assigned:
+    print(f"{g} {s} — {d} {tt} {r} {tea}")
+
+
+schedule_by_slots = defaultdict(list)
+for (g, s, d, tt, r, tea) in assigned:
+    schedule_by_slots[(g, d, tt)].append((s, r, tea))
+
+for g in groups:
+    for d in days:
+        for tt in times:
+            slot = (g, d, tt)
+            items = schedule_by_slots.get(slot, [])
+            print(f"{g} {d} {tt}:", end='')
+            if not items:
+                print("   (свободно)")
+            else:
+                for (s, r, tea) in items:
+                    print(f"   {s} в {r} у {tea}")
+        print("-" * 40)
+
+res = pd.DataFrame(assigned)
+res.to_csv('res.csv')
+#print(assigned)
