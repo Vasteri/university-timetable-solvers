@@ -50,7 +50,16 @@ for g in groups:
                         x[(g, s, d, tt, r, tea)] = LpVariable(varname, cat="Binary")
 
 # Целевая функция
-prob += lpSum([])  # нулевая целевая функция
+# prob += lpSum([])  # нулевая целевая функция
+
+# Минимизировать количество пар в первой паре (11:10)
+early_penalty = lpSum(
+    x[(g, s, d, "11:10", r, tea)] 
+    for g in groups for s in subjects for d in days 
+    for r in rooms for tea in subject_teachers[s]
+)
+
+prob += early_penalty
 
 # Ограничения
 
@@ -109,8 +118,8 @@ if len(assigned) != total_required_pairs:
     print("Внимание: назначено пар не совпадает с требуемым числом!")
 
 
-for (g, s, d, tt, r, tea) in assigned:
-    print(f"{g} {s} — {d} {tt} {r} {tea}")
+# for (g, s, d, tt, r, tea) in assigned:
+#     print(f"{g} {s} — {d} {tt} {r} {tea}")
 
 
 schedule_by_slots = defaultdict(list)
@@ -129,7 +138,8 @@ for g in groups:
                 for (s, r, tea) in items:
                     print(f"   {s} в {r} у {tea}")
         print("-" * 40)
+    print("next group")
 
 res = pd.DataFrame(assigned)
-res.to_csv('res.csv')
+# res.to_csv('res.csv')
 #print(assigned)
