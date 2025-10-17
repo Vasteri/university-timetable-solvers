@@ -1,6 +1,7 @@
 from pulp import LpProblem, LpMinimize, LpVariable, lpSum, LpStatus
 from collections import defaultdict
 import pandas as pd
+import sql
 
 
 # Количество занятий по предметам для каждой группы в неделю
@@ -12,7 +13,18 @@ subject_count = {
 default_count = 2
 
 
+names = ["groups", "subjects", "days", "times", "rooms", "teachers"]
 
+db = sql.DataBase()
+
+groups = db.get_groups()
+subjects = db.get_subjects()
+teachers = db.get_teachers()
+rooms = db.get_rooms()
+days = db.get_days()
+times = db.get_times()
+subject_teachers = db.get_subject_teachers()
+"""
 # Исходные множества
 groups = ["A-02-30", "A-05-30", "A-08-30", "A-16-30", "A-18-30"]
 subjects = ["math", "physics", "english", "IT", "economic"]
@@ -29,6 +41,7 @@ subject_teachers = {
     "economic": ["T4"],
     "IT": ["T5", "T6", "T7"]
 }
+"""
 
 total_required_pairs = sum(subject_count.get((g, s), default_count) for g in groups for s in subjects)
 print("Обязательных пар в неделю:", total_required_pairs)
@@ -109,9 +122,10 @@ if len(assigned) != total_required_pairs:
     print("Внимание: назначено пар не совпадает с требуемым числом!")
 
 
+print()
 for (g, s, d, tt, r, tea) in assigned:
-    print(f"{g} {s} — {d} {tt} {r} {tea}")
-
+    print(f"{g}\t{s:8}\t{d:8}\t{tt}\t{r}\t{tea}")
+print()
 
 schedule_by_slots = defaultdict(list)
 for (g, s, d, tt, r, tea) in assigned:
@@ -131,5 +145,5 @@ for g in groups:
         print("-" * 40)
 
 res = pd.DataFrame(assigned)
-res.to_csv('res.csv')
-#print(assigned)
+res.to_csv('res.csv', index=False, header=names)
+#print(x)
