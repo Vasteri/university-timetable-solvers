@@ -1,7 +1,8 @@
 #include "apiclient.h"
-
+#include "stdio.h"
 
 void ApiClient::get(const QUrl& url){
+    std::printf("Send\n");
     QNetworkRequest request(url);
     QNetworkReply* reply = manager->get(request);
     connectReply(reply);
@@ -53,6 +54,7 @@ void ApiClient::connectReply(QNetworkReply* reply){
 
 void ApiClient::handleReply(QNetworkReply* reply){
     if (reply->error() != QNetworkReply::NoError) {
+        std::printf("Error\n");
         emit errorOccured(reply->errorString());
         reply->deleteLater();
         return;
@@ -62,15 +64,19 @@ void ApiClient::handleReply(QNetworkReply* reply){
     QString contentType = reply->header(QNetworkRequest::ContentTypeHeader).toString();
 
     if (contentType.contains("application/json")) {
+        std::printf("json\n");
         QJsonDocument doc = QJsonDocument::fromJson(response);
         if (doc.isObject()) {
             emit jsonReceived(doc.object());
         } else {
+            std::printf("error json\n");
             emit errorOccured("Некорректный JSON");
         }
     } else if (contentType.startsWith("text/")) {
+        std::printf("text\n");
         emit textReceived(QString::fromUtf8(response));
     } else {
+        std::printf("binary\n");
         emit binaryReceived(response);
     }
 

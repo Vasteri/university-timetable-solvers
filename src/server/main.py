@@ -1,26 +1,25 @@
 from milp_pulp import MyPulp
 from sql import DataBase
 
-def analyz_data(r):
-    import polars as pl
+from fastapi import FastAPI
+from os.path import exists
+#from pydantic import BaseModel  # Понадобится позже для формата данных по API
 
-    data = pl.read_csv('res.csv')
-    print(data)
+PATH_DB = 'mydb.db'
+SQL_URL_ENGINE = f"sqlite:///{PATH_DB}"
+DEBUG = True
+FILE_DB_IS_EXISTS = exists(PATH_DB)
 
-    res = data.filter(pl.col('times') == '11:10')
-    print(res)
-    print(r.days)
+db = DataBase(SQL_URL_ENGINE)
+if DEBUG and not FILE_DB_IS_EXISTS: db.create_tables(), db.init_data()
+r = MyPulp(db)
+app = FastAPI(debug=DEBUG)
 
-def main():
-    db = DataBase()
-    r = MyPulp(db)
-
+@app.get("/solve_pulp")
+def predict():
     r.solve()
-    r.save_csv()
-    r.print_res()
+    return {"result": r.get_json()}
 
-    analyz_data(r)
-    
-
-if __name__ == "__main__":
-    main()
+@app.get("/")
+def hello():
+    return {"result": "Hello"}

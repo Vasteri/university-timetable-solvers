@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include "apiclient.h"
+#include "graphic.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -19,6 +20,7 @@ public:
     ~MainWindow();
 
 private:
+    Graphic *graphic;
     ApiClient *api;
     Ui::MainWindow *ui;
 };

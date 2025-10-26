@@ -14,6 +14,20 @@ class MyPulp:
         self._init_objective_function()
         self._init_constraints()
 
+    def get_json(self):
+        schedule = [
+            {
+                "group": g,
+                "subject": s,
+                "day": d,
+                "time": t,
+                "room": r,
+                "teacher": tea
+            }
+            for (g, s, d, t, r, tea) in self.assigned
+        ]
+        return schedule
+
     def _init_objective_function(self):
         # Минимизировать количество пар в первой паре (11:10)
         self.problem += lpSum(

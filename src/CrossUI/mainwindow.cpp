@@ -7,17 +7,22 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
     api = new ApiClient(this);
+    graphic = new Graphic(this);
+
+    //this->setCentralWidget(graphic);
+    ui->tabWidget->widget(1)->layout()->addWidget(graphic);
 
     connect(ui->but_send, &QPushButton::clicked, this, [this](){
-        QJsonObject data;
-        data["x1"] = ui->edit_1->text().toFloat();
-        data["x2"] = ui->edit_2->text().toFloat();
         ui->label_res->setText("");
-        api->postJson(QUrl("http://" + ui->edit_ip->text() + ":8000/predict"), data);
+        api->get(QUrl("http://" + ui->edit_ip->text() + ":8000"));
     });
 
     connect(api, &ApiClient::jsonReceived, this, [this](const QJsonObject& obj){
         ui->label_res->setText(QString::fromUtf8(QJsonDocument(obj).toJson(QJsonDocument::Compact)));
+    });
+
+    connect(api, &ApiClient::errorOccured, this, [this](const QString& err){
+        ui->label_res->setText(err);
     });
 }
 
@@ -25,4 +30,5 @@ MainWindow::~MainWindow()
 {
     delete ui;
     delete api;
+    delete graphic;
 }
