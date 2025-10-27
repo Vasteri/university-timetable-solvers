@@ -27,6 +27,7 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         ${PROJECT_SOURCES}
         apiclient.h apiclient.cpp
         graphic.h graphic.cpp graphic.ui
+        tablish.h tablish.cpp tablish.ui
 
     )
 # Define target properties for Android with Qt 6 as:

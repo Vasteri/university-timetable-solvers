@@ -1,5 +1,4 @@
 #include "apiclient.h"
-#include "stdio.h"
 
 void ApiClient::get(const QUrl& url){
     std::printf("Send\n");

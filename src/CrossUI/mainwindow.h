@@ -4,6 +4,7 @@
 #include <QMainWindow>
 #include "apiclient.h"
 #include "graphic.h"
+#include "tablish.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -22,6 +23,7 @@ public:
 private:
     Graphic *graphic;
     ApiClient *api;
+    Tablish *tablish;
     Ui::MainWindow *ui;
 };
 #endif // MAINWINDOW_H

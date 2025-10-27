@@ -114,6 +114,7 @@
        <attribute name="title">
         <string>Таблицы</string>
        </attribute>
+       <layout class="QGridLayout" name="gridLayout_4"/>
       </widget>
      </widget>
     </item>

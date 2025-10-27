@@ -8,9 +8,12 @@ MainWindow::MainWindow(QWidget *parent)
     ui->setupUi(this);
     api = new ApiClient(this);
     graphic = new Graphic(this);
+    tablish = new Tablish(this);
 
     //this->setCentralWidget(graphic);
     ui->tabWidget->widget(1)->layout()->addWidget(graphic);
+
+    ui->tabWidget->widget(2)->layout()->addWidget(tablish);
 
     connect(ui->but_send, &QPushButton::clicked, this, [this](){
         ui->label_res->setText("");
@@ -31,4 +34,5 @@ MainWindow::~MainWindow()
     delete ui;
     delete api;
     delete graphic;
+    delete tablish;
 }
