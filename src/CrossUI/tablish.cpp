@@ -4,6 +4,8 @@
 #include <QStandardItemModel>
 #include <QSortFilterProxyModel>
 
+#include "QScheduleSortModel.cpp"
+
 Tablish::Tablish(QWidget *parent)
     : QWidget(parent)
     , ui(new Ui::Tablish)
@@ -31,28 +33,24 @@ void Tablish::init_response_api(QLabel *lab_api, QPushButton *but_api) {
         //lab_api->setText(QString::fromUtf8(QJsonDocument(obj).toJson(QJsonDocument::Compact)));
         if (obj.contains("result") && obj["result"].isArray()) {
             QJsonArray jsonArray = obj["result"].toArray();
-            qDebug() << jsonArray;
-            //
             QStandardItemModel *model = new QStandardItemModel;
-
-            QStringList headers = {"group", "subject", "day", "time", "room", "teacher"};
+            QStringList headers = {"group", "day", "time", "subject", "room", "teacher"};
             model->setHorizontalHeaderLabels(headers);
 
-            for (const QJsonValue &val : jsonArray) {
-                QJsonObject obj = val.toObject();
+            for (int i = 0; i < jsonArray.size(); ++i) {
+                const QJsonObject obj = jsonArray.at(i).toObject();
                 QList<QStandardItem*> row;
-                for (const QString &key : headers)
-                    row << new QStandardItem(obj[key].toString());
+                for (int j = 0; j < headers.size(); ++j)
+                    row << new QStandardItem(obj[headers.at(j)].toString());
                 model->appendRow(row);
             }
 
-            QSortFilterProxyModel *proxy = new QSortFilterProxyModel;
+            QScheduleSortModel *proxy = new QScheduleSortModel;
             proxy->setSourceModel(model);
             proxy->setDynamicSortFilter(true);
 
             ui->table_view_res->setModel(proxy);
             ui->table_view_res->setSortingEnabled(true);
-            //
         }
         else {
             lab_api->setText(lab_api->text() + QString("Incorrect json format"));
