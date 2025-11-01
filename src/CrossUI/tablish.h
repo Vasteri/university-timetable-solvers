@@ -4,7 +4,9 @@
 #include <QWidget>
 #include <QLabel>
 #include <QPushButton>
+#include <QStandardItemModel>
 
+#include "QScheduleSortModel.cpp"
 #include "apiclient.h"
 
 namespace Ui {
@@ -22,8 +24,18 @@ public:
 private:
     Ui::Tablish *ui;
     ApiClient *api;
+    bool fill_empty;
+
+    QStandardItemModel *model;
+    QScheduleSortModel *proxy;
+    QStringList headers;
 
     void init_response_api(QLabel *lab_api, QPushButton *but_api);
+    void init_table_view();
+    void table_data_update(QJsonArray jsonArray);
+    void onHeaderClicked(int column);
+    void fill_or_clear_empty_in_table();
+    QSet<QString> uniqueValuesForColumn(int column);
 };
 
 #endif // TABLISH_H

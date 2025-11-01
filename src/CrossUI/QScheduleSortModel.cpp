@@ -18,8 +18,7 @@ protected:
         };
         QString header = sourceModel()->headerData(left.column(), Qt::Horizontal).toString();
 
-        // Если сортируем колонку "день"
-        if (header == "day") { // например, если колонка 2 = "day"
+        if (header == "day") {
             int leftIndex = dayOrder.indexOf(leftData.toString());
             int rightIndex = dayOrder.indexOf(rightData.toString());
             return leftIndex < rightIndex;
@@ -31,5 +30,29 @@ protected:
 
         // иначе обычное сравнение
         return QSortFilterProxyModel::lessThan(left, right);
+    }
+public:
+    QMap<int, QSet<QString>> allowValues;
+
+    void setAllowedValues(int column, const QSet<QString>& values) {
+        if (values.isEmpty()) allowValues.remove(column);
+        else allowValues[column] = values;
+        invalidateFilter();
+    }
+
+protected:
+    bool filterAcceptsRow(int sourceRow, const QModelIndex &sourceParent) const override {
+        Q_UNUSED(sourceParent);
+        for (auto it = allowValues.constBegin(); it != allowValues.constEnd(); ++it) {
+            int col = it.key();
+            const QSet<QString>& allowed = it.value();
+            if (allowed.isEmpty()) continue;
+            QModelIndex idx = sourceModel()->index(sourceRow, col);
+            QString cell = sourceModel()->data(idx).toString();
+            if (!allowed.contains(cell))
+                return false;
+        }
+        // если все колонки прошли - строка допускается
+        return true;
     }
 };

@@ -1,6 +1,7 @@
 from pulp import LpProblem, LpMinimize, LpVariable, lpSum, LpStatus
 from collections import defaultdict
 from pandas import DataFrame
+import pulp
 
 
 class MyPulp:
@@ -125,7 +126,7 @@ class MyPulp:
 
     def solve(self):
         print("Solving...")
-        status = self.problem.solve()
+        status = self.problem.solve(pulp.PULP_CBC_CMD(msg=True))
         print("Status:", LpStatus[self.problem.status])
 
         self.assigned = []

@@ -1,13 +1,14 @@
 #include "apiclient.h"
 
 void ApiClient::get(const QUrl& url){
-    std::printf("Send\n");
+    qDebug() << "Apiclient get";
     QNetworkRequest request(url);
     QNetworkReply* reply = manager->get(request);
     connectReply(reply);
 }
 
 void ApiClient::postJson(const QUrl& url, const QJsonObject& json){
+    qDebug() << "Apiclient postJson";
     QNetworkRequest request(url);
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
     QNetworkReply* reply = manager->post(request, QJsonDocument(json).toJson());
@@ -15,6 +16,7 @@ void ApiClient::postJson(const QUrl& url, const QJsonObject& json){
 }
 
 void ApiClient::putJson(const QUrl& url, const QJsonObject& json){
+    qDebug() << "Apiclient putJson";
     QNetworkRequest request(url);
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
     QNetworkReply* reply = manager->put(request, QJsonDocument(json).toJson());
@@ -22,6 +24,7 @@ void ApiClient::putJson(const QUrl& url, const QJsonObject& json){
 }
 
 void ApiClient::del(const QUrl& url){
+    qDebug() << "Apiclient del";
     QNetworkRequest request(url);
     QNetworkReply* reply = manager->deleteResource(request);
     connectReply(reply);
@@ -53,7 +56,7 @@ void ApiClient::connectReply(QNetworkReply* reply){
 
 void ApiClient::handleReply(QNetworkReply* reply){
     if (reply->error() != QNetworkReply::NoError) {
-        std::printf("Error\n");
+        qDebug() << "Error apiclient: " << reply->errorString() << "\n";
         emit errorOccured(reply->errorString());
         reply->deleteLater();
         return;
@@ -63,19 +66,19 @@ void ApiClient::handleReply(QNetworkReply* reply){
     QString contentType = reply->header(QNetworkRequest::ContentTypeHeader).toString();
 
     if (contentType.contains("application/json")) {
-        std::printf("json\n");
+        qDebug() << "Received json";
         QJsonDocument doc = QJsonDocument::fromJson(response);
         if (doc.isObject()) {
             emit jsonReceived(doc.object());
         } else {
-            std::printf("error json\n");
+            qDebug() << "error json";
             emit errorOccured("Некорректный JSON");
         }
     } else if (contentType.startsWith("text/")) {
-        std::printf("text\n");
+        qDebug() << "Received text";
         emit textReceived(QString::fromUtf8(response));
     } else {
-        std::printf("binary\n");
+        qDebug() << "Received binary";
         emit binaryReceived(response);
     }
 
