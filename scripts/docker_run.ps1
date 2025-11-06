@@ -1,0 +1,1 @@
+docker run --rm --name py_server_debug -p 8000:8000 py_server:0.1

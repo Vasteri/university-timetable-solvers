@@ -1,6 +1,6 @@
 from pulp import LpProblem, LpMinimize, LpVariable, lpSum, LpStatus
 from collections import defaultdict
-from pandas import DataFrame
+#from pandas import DataFrame
 import pulp
 
 
@@ -135,9 +135,11 @@ class MyPulp:
                 g, s, d, tt, r, tea = key
                 self.assigned.append((g, s, d, tt, r, tea))
 
+    """
     def save_csv(self):
         res = DataFrame(self.assigned)
         res.to_csv('res.csv', index=False, header=self.names)
+    """
 
     def print_res(self):
         print()
