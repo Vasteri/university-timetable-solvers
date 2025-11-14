@@ -1,32 +1,6 @@
 
-def test_sql(): ...
 def test_pulp(): ...
 def test_server(): ...
-
-def test_sql():
-    import sql
-
-    db = sql.DataBase()
-
-    db.drop_tables()
-    db.create_tables()
-    db.init_data()
-
-    groups = db.get_groups()
-    subjects = db.get_subjects()
-    teachers = db.get_teachers()
-    rooms = db.get_rooms()
-    days = db.get_days()
-    times = db.get_times()
-    subject_teachers = db.get_subject_teachers()
-
-    print(groups)
-    print(subjects)
-    print(teachers)
-    print(rooms)
-    print(days)
-    print(times)
-    print(subject_teachers)
 
 def test_pulp():
     from milp_pulp import MyPulp
@@ -101,8 +75,61 @@ def test_server():
 
     root.mainloop()
 
+def create_default_json():
+    import json
+
+    subject_count = {
+        ("A-18-30", "math"): 2,
+        ("A-16-30", "math"): 1,
+    }
+
+    default_count = 2
+
+    groups = ["A-02-30", "A-05-30", "A-08-30", "A-16-30", "A-18-30"]
+    subjects = ["math", "physics", "english", "IT", "economic"]
+    teachers = ["T1", "T2", "T3", "T4", "T5", "T6", "T7"]
+    rooms = ["m700", "m707", "m200"]
+    days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
+    times = ["9:20", "11:10", "13:45", "15:35"]
+
+    subject_teachers = {
+        "math": ["T1"],
+        "physics": ["T2"],
+        "english": ["T3"],
+        "economic": ["T4"],
+        "IT": ["T5", "T6", "T7"]
+    }
+
+    subject_count_json = [
+        #[g, s, c]
+        {"group":g, "subject":s, "count":c}
+        for (g, s), c in subject_count.items()
+    ]
+
+    # структура
+    data = {
+        "default_count": default_count,
+        "groups": groups,
+        "subjects": subjects,
+        "teachers": teachers,
+        "rooms": rooms,
+        "days": days,
+        "times": times,
+        "subject_teachers": subject_teachers,
+        "subject_count": subject_count_json
+    }
+
+    # Сохраняем в UTF-8 (ensure_ascii=False)
+    with open("temp/data1.json", "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=4, separators=(",", ": "), ensure_ascii=False)
+
+    with open("temp/data2.json", "w", encoding="utf-8") as f:
+        json.dump(data, f, separators=(",", ":"), ensure_ascii=False)
+
+    print("Файл data.json успешно сохранён!")
 
 
-#test_sql()
+
 #test_pulp()
-test_server()
+#test_server()
+create_default_json()

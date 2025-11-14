@@ -1,24 +1,41 @@
 from milp_pulp import MyPulp
-from sql import DataBase
 
 from fastapi import FastAPI
-from os.path import exists
-#from pydantic import BaseModel  # Понадобится позже для формата данных по API
+from fastapi.responses import ORJSONResponse
+from pydantic import BaseModel
+from typing import List, Dict
 
-PATH_DB = 'mydb.db'
-SQL_URL_ENGINE = f"sqlite:///{PATH_DB}"
+class SubjectCountItem(BaseModel):
+    group: str
+    subject: str
+    count: int
+
+class InputData(BaseModel):
+    default_count: int
+    groups: List[str]
+    subjects: List[str]
+    teachers: List[str]
+    rooms: List[str]
+    days: List[str]
+    times: List[str]
+    subject_teachers: Dict[str, List[str]]
+    subject_count: List[SubjectCountItem]
+
 DEBUG = True
-FILE_DB_IS_EXISTS = exists(PATH_DB)
 
-db = DataBase(SQL_URL_ENGINE)
-if DEBUG and not FILE_DB_IS_EXISTS: db.create_tables(), db.init_data()
-r = MyPulp(db)
 app = FastAPI(debug=DEBUG)
 
-@app.get("/solve_pulp")
-def predict():
+@app.get("/solve_pulp", response_class=ORJSONResponse)
+def solve_pulp():
+    r = MyPulp()
     r.solve()
     return {"result": r.get_json()}
+
+@app.post("/solve_pulp_2", response_class=ORJSONResponse)
+def solve_pulp_2(input:InputData):
+    r = MyPulp(json_data=input)
+    r.solve()
+    return {"result": r.get_json_2()}
 
 @app.get("/")
 def hello():
