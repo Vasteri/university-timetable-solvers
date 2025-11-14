@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from fastapi.responses import ORJSONResponse
 from pydantic import BaseModel
 from typing import List, Dict
+import json
 
 class SubjectCountItem(BaseModel):
     group: str
@@ -29,6 +30,12 @@ app = FastAPI(debug=DEBUG)
 def solve_pulp():
     r = MyPulp()
     r.solve()
+    """    with open("temp/res_1.json", "w", encoding="utf-8") as f:
+        json.dump(r.get_json(), f, indent=4, separators=(",", ": "), ensure_ascii=False)
+    with open("temp/res_2.json", "w", encoding="utf-8") as f:
+        json.dump(r.get_json_2(), f, indent=4, separators=(",", ": "), ensure_ascii=False)
+    with open("temp/res_3.json", "w", encoding="utf-8") as f:
+        json.dump(r.get_json_2(), f, separators=(",", ":"), ensure_ascii=False)"""
     return {"result": r.get_json()}
 
 @app.post("/solve_pulp_2", response_class=ORJSONResponse)

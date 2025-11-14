@@ -120,10 +120,10 @@ def create_default_json():
     }
 
     # Сохраняем в UTF-8 (ensure_ascii=False)
-    with open("temp/data1.json", "w", encoding="utf-8") as f:
+    with open("temp/input_1.json", "w", encoding="utf-8") as f:
         json.dump(data, f, indent=4, separators=(",", ": "), ensure_ascii=False)
 
-    with open("temp/data2.json", "w", encoding="utf-8") as f:
+    with open("temp/input_2.json", "w", encoding="utf-8") as f:
         json.dump(data, f, separators=(",", ":"), ensure_ascii=False)
 
     print("Файл data.json успешно сохранён!")

@@ -6,18 +6,21 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    ip = ui->edit_ip->text();
     api = new ApiClient(this);
     graphic = new Graphic(this);
     tablish = new Tablish(this);
+    input_data = new InputData(this);
 
     //this->setCentralWidget(graphic);
-    ui->tabWidget->widget(1)->layout()->addWidget(graphic);
-
-    ui->tabWidget->widget(2)->layout()->addWidget(tablish);
+    ui->tabWidget->widget(1)->layout()->addWidget(input_data);
+    ui->tabWidget->widget(2)->layout()->addWidget(graphic);
+    ui->tabWidget->widget(3)->layout()->addWidget(tablish);
 
     connect(ui->but_send, &QPushButton::clicked, this, [this](){
-        ui->label_res->setText("");
-        api->get(QUrl("http://" + ui->edit_ip->text() + ":8000"));
+        ui->label_res->setText("Запрос...");
+        ip = ui->edit_ip->text();
+        api->get(QUrl("http://" + ip + ":8000"));
     });
 
     connect(api, &ApiClient::jsonReceived, this, [this](const QJsonObject& obj){
@@ -35,4 +38,5 @@ MainWindow::~MainWindow()
     delete api;
     delete graphic;
     delete tablish;
+    delete input_data;
 }

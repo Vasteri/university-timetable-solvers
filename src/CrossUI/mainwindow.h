@@ -5,6 +5,7 @@
 #include "apiclient.h"
 #include "graphic.h"
 #include "tablish.h"
+#include "inputdata.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -20,10 +21,14 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
+    QString get_ip() const {return ip;};
+
 private:
+    QString ip;
     Graphic *graphic;
     ApiClient *api;
     Tablish *tablish;
+    InputData *input_data;
     Ui::MainWindow *ui;
 };
 #endif // MAINWINDOW_H

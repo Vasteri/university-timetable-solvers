@@ -31,6 +31,7 @@ Tablish::~Tablish()
 {
     delete ui;
     delete api;
+    delete model;
 }
 
 void Tablish::fill_or_clear_empty_in_table() {
