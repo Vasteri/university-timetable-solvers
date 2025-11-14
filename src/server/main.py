@@ -36,7 +36,7 @@ def solve_pulp():
         json.dump(r.get_json_2(), f, indent=4, separators=(",", ": "), ensure_ascii=False)
     with open("temp/res_3.json", "w", encoding="utf-8") as f:
         json.dump(r.get_json_2(), f, separators=(",", ":"), ensure_ascii=False)"""
-    return {"result": r.get_json()}
+    return {"result": r.get_json_2()}
 
 @app.post("/solve_pulp_2", response_class=ORJSONResponse)
 def solve_pulp_2(input:InputData):

@@ -1,0 +1,75 @@
+{
+    "default_count": 2,
+    "groups": [
+        "A-02-30",
+        "A-05-30",
+        "A-08-30",
+        "A-16-30",
+        "A-18-30"
+    ],
+    "subjects": [
+        "math",
+        "physics",
+        "english",
+        "IT",
+        "economic"
+    ],
+    "teachers": [
+        "T1",
+        "T2",
+        "T3",
+        "T4",
+        "T5",
+        "T6",
+        "T7"
+    ],
+    "rooms": [
+        "m700",
+        "m707",
+        "m200"
+    ],
+    "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday"
+    ],
+    "times": [
+        "9:20",
+        "11:10",
+        "13:45",
+        "15:35"
+    ],
+    "subject_teachers": {
+        "math": [
+            "T1"
+        ],
+        "physics": [
+            "T2"
+        ],
+        "english": [
+            "T3"
+        ],
+        "economic": [
+            "T4"
+        ],
+        "IT": [
+            "T5",
+            "T6",
+            "T7"
+        ]
+    },
+    "subject_count": [
+        {
+            "group": "A-18-30",
+            "subject": "math",
+            "count": 2
+        },
+        {
+            "group": "A-16-30",
+            "subject": "math",
+            "count": 1
+        }
+    ]
+}
