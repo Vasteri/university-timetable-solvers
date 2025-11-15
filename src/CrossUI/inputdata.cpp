@@ -15,8 +15,9 @@ InputData::InputData(QWidget *parent)
 {
     ui->setupUi(this);
     api = new ApiClient();
+    model = new QStandardItemModel();
 
-    connect(ui->but_save, &QPushButton::clicked, this, [this](){
+    connect(ui->but_open_file, &QPushButton::clicked, this, [this](){
 
         QString fileName = QFileDialog::getOpenFileName(this, "Select JSON file", "", "*.json");
         if (fileName.isEmpty()) return;
@@ -38,27 +39,26 @@ InputData::InputData(QWidget *parent)
         QJsonObject jsonObject = doc.object();
 
         //==================================
-        model = new QStandardItemModel();
+        model->clear();
         model->setHorizontalHeaderLabels({"Key", "Value"});
         addJsonToItem(jsonObject, model->invisibleRootItem());
         ui->treeView->setModel(model);
         ui->treeView->setEditTriggers(QAbstractItemView::DoubleClicked | QAbstractItemView::SelectedClicked);
         ui->treeView->expandAll();
         ui->treeView->show();
-
-        // После редактирования пользователя
-        QObject::connect(model, &QStandardItemModel::itemChanged, this, [this]() {
-            QJsonValue updatedJson = modelItemToJson(model->invisibleRootItem());
-            ui->lab_info->setText(QJsonDocument(updatedJson.toObject()).toJson(QJsonDocument::Compact));
-        });
         //=============================
 
         ui->lab_info->setText("Sending...");
         api->postJson(QUrl("http://127.0.0.1:8000/solve_pulp_2"), jsonObject);
     });
 
+    connect(model, &QStandardItemModel::itemChanged, this, [this]() {
+        QJsonValue updatedJson = modelItemToJson(model->invisibleRootItem());
+        ui->lab_info->setText(QJsonDocument(updatedJson.toObject()).toJson(QJsonDocument::Compact));
+    });
+
     connect(api, &ApiClient::jsonReceived, this, [this](const QJsonObject& obj){
-        //ui->lab_info->setText(QString::fromUtf8(QJsonDocument(obj).toJson(QJsonDocument::Compact)));
+        ui->lab_info->setText(QString::fromUtf8(QJsonDocument(obj).toJson(QJsonDocument::Compact)));
     });
 
     connect(api, &ApiClient::errorOccured, this, [this](const QString& err){
@@ -68,7 +68,7 @@ InputData::InputData(QWidget *parent)
     auto *mw = qobject_cast<MainWindow*>(parentWidget());
     if (mw) {
         ip = mw->get_ip();
-        ui->label->setText(ip);
+        ui->lab_info->setText(ip);
     }
 }
 
@@ -84,7 +84,7 @@ void addJsonToItem(const QJsonValue &value, QStandardItem *parent) {
         QJsonObject obj = value.toObject();
         for (auto it = obj.begin(); it != obj.end(); ++it) {
             QStandardItem *keyItem = new QStandardItem(it.key());
-            QStandardItem *valueItem = new QStandardItem(""); // значение пока пустое
+            QStandardItem *valueItem = new QStandardItem("");
             parent->appendRow({keyItem, valueItem});
             addJsonToItem(it.value(), keyItem); // рекурсивно добавляем вложенные объекты
         }
@@ -101,7 +101,7 @@ void addJsonToItem(const QJsonValue &value, QStandardItem *parent) {
 
 
 QJsonValue modelItemToJson(QStandardItem *item) {
-    // Если нет дочерних элементов — это примитив
+    // Если нет дочерних элементов - это примитив
     if (!item->hasChildren()) {
         return QJsonValue(item->text());
     }
@@ -109,7 +109,6 @@ QJsonValue modelItemToJson(QStandardItem *item) {
         return QJsonValue(item->child(0, 1)->text());
     }
 
-    // Проверяем, все ли дочерние элементы имеют пустой ключ
     bool allEmptyKeys = true;
     for (int i = 0; i < item->rowCount(); ++i) {
         if (!item->child(i, 0)->text().isEmpty()) {

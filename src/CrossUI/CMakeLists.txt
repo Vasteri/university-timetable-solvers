@@ -30,6 +30,7 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         tablish.h tablish.cpp tablish.ui
         QScheduleSortModel.cpp
         inputdata.h inputdata.cpp inputdata.ui
+        reshator.h reshator.cpp reshator.ui
 
     )
 # Define target properties for Android with Qt 6 as:

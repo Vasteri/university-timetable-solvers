@@ -2,10 +2,10 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include "apiclient.h"
 #include "graphic.h"
 #include "tablish.h"
 #include "inputdata.h"
+#include "reshator.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -26,9 +26,9 @@ public:
 private:
     QString ip;
     Graphic *graphic;
-    ApiClient *api;
     Tablish *tablish;
     InputData *input_data;
+    Reshator *reshator;
     Ui::MainWindow *ui;
 };
 #endif // MAINWINDOW_H
