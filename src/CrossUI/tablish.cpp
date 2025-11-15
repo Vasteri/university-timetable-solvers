@@ -127,11 +127,11 @@ void Tablish::table_data_update(QJsonArray jsonArray) {
         headers = {"group", "day", "time", "subject", "room", "teacher"};
         model->setHorizontalHeaderLabels(headers);
     }
-    for (int i = 0; i < jsonArray.size(); ++i) {
-        const QJsonObject obj = jsonArray.at(i).toObject();
+    for (int i = 1; i < jsonArray.size(); ++i) {
+        const QJsonArray elem = jsonArray.at(i).toArray();
         QList<QStandardItem*> row;
         for (int j = 0; j < headers.size(); ++j)
-            row << new QStandardItem(obj[headers.at(j)].toString());
+            row << new QStandardItem(elem.at(j).toString());
         model->appendRow(row);
     }
     ui->table_view_res->resizeColumnsToContents();

@@ -45,9 +45,9 @@ class MyPulp:
         return schedule
     
     def get_json_2(self):
-        schedule = [["group", "subject", "day", "time", "room", "teacher"]]
+        schedule = [["group", "day", "time", "subject", "room", "teacher"]]
         schedule += [
-            [ g, s, d, t, r, tea ]
+            [ g, d, t, s, r, tea ]
             for (g, s, d, t, r, tea) in self.assigned
         ]
         return schedule
