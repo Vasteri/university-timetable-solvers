@@ -7,12 +7,12 @@
 
 //#include "QScheduleSortModel.cpp"
 
-Tablish::Tablish(QWidget *parent)
+Tablish::Tablish(QWidget *parent, GlobalDataTransition* data)
     : QWidget(parent)
     , ui(new Ui::Tablish)
 {
     ui->setupUi(this);
-    api = new ApiClient();
+    this->data = data;
     fill_empty = false;
     init_response_api(ui->lab_info, ui->pushButton);
     init_table_view();
@@ -30,7 +30,7 @@ Tablish::Tablish(QWidget *parent)
 Tablish::~Tablish()
 {
     delete ui;
-    delete api;
+    delete data;
     delete model;
 }
 
@@ -84,24 +84,19 @@ void Tablish::fill_or_clear_empty_in_table() {
 
 void Tablish::init_response_api(QLabel *lab_api, QPushButton *but_api) {
     connect(but_api, &QPushButton::clicked, this, [this, lab_api](){
-        lab_api->setText("Sending...");
-        api->get(QUrl("http://127.0.0.1:8000/solve_pulp"));
-    });
+        //lab_api->setText(err);
+        QJsonObject obj = this->data->GetData();
 
-    connect(api, &ApiClient::jsonReceived, this, [this, lab_api](const QJsonObject& obj){
-        lab_api->setText("Received: ");
-        //lab_api->setText(QString::fromUtf8(QJsonDocument(obj).toJson(QJsonDocument::Compact)));
         if (obj.contains("result") && obj["result"].isArray()) {
             QJsonArray jsonArray = obj["result"].toArray();
             table_data_update(jsonArray);
         }
-        else {
-            lab_api->setText(lab_api->text() + QString("Incorrect json format"));
+        else if (obj.isEmpty()){
+            lab_api->setText(QString("Статус: Нет данных"));
         }
-    });
-
-    connect(api, &ApiClient::errorOccured, this, [this, lab_api](const QString& err){
-        lab_api->setText(err);
+        else {
+            lab_api->setText(QString("Статус: Incorrect json format"));
+        }
     });
 }
 

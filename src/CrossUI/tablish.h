@@ -7,7 +7,7 @@
 #include <QStandardItemModel>
 
 #include "QScheduleSortModel.cpp"
-#include "apiclient.h"
+#include "globaldatatransition.h"
 
 namespace Ui {
 class Tablish;
@@ -18,12 +18,12 @@ class Tablish : public QWidget
     Q_OBJECT
 
 public:
-    explicit Tablish(QWidget *parent = nullptr);
+    explicit Tablish(QWidget *parent = nullptr, GlobalDataTransition* data = nullptr);
     ~Tablish();
 
 private:
     Ui::Tablish *ui;
-    ApiClient *api;
+    GlobalDataTransition* data;
     bool fill_empty;
 
     QStandardItemModel *model;

@@ -2,7 +2,7 @@
 #define RESHATOR_H
 
 #include <QWidget>
-#include "apiclient.h"
+#include "globaldatatransition.h"
 
 namespace Ui {
 class Reshator;
@@ -13,12 +13,11 @@ class Reshator : public QWidget
     Q_OBJECT
 
 public:
-    explicit Reshator(QWidget *parent = nullptr);
+    explicit Reshator(QWidget *parent = nullptr, GlobalDataTransition* data = nullptr);
     ~Reshator();
 
 private:
-    QString ip;
-    ApiClient *api;
+    GlobalDataTransition* data;
     Ui::Reshator *ui;
 };
 

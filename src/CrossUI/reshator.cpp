@@ -1,31 +1,27 @@
 #include "reshator.h"
 #include "ui_reshator.h"
 
-Reshator::Reshator(QWidget *parent)
+Reshator::Reshator(QWidget *parent, GlobalDataTransition* data)
     : QWidget(parent)
     , ui(new Ui::Reshator)
 {
     ui->setupUi(this);
 
-    api = new ApiClient(this);
+    this->data = data;
 
     connect(ui->but_send, &QPushButton::clicked, this, [this](){
         ui->lab_info->setText("Запрос...");
-        ip = ui->edit_ip->text();
-        api->get(QUrl("http://" + ip + ":8000"));
+        this->data->ip = ui->edit_ip->text();
+        this->data->SendData();
     });
 
-    connect(api, &ApiClient::jsonReceived, this, [this](const QJsonObject& obj){
-        ui->lab_info->setText(QString::fromUtf8(QJsonDocument(obj).toJson(QJsonDocument::Compact)));
-    });
-
-    connect(api, &ApiClient::errorOccured, this, [this](const QString& err){
-        ui->lab_info->setText(err);
+    connect(this->data, &GlobalDataTransition::Received, this, [this](){
+        ui->lab_info->setText(this->data->message);
     });
 }
 
 Reshator::~Reshator()
 {
     delete ui;
-    delete api;
+    delete data;
 }
