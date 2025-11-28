@@ -20,7 +20,7 @@ class InputData(BaseModel):
     days: List[str]
     times: List[str]
     subject_teachers: Dict[str, List[str]]
-    subject_count: List[SubjectCountItem]
+    subject_count: Dict[str, Dict[str, int]]
 
 DEBUG = True
 

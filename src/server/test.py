@@ -30,6 +30,7 @@ def test_server():
     import tkinter as tk
     from tkinter import messagebox
     import requests
+    import json
 
     API_URL = "http://127.0.0.1:8000/"  # наш API
 
@@ -44,7 +45,9 @@ def test_server():
 
     def solve_pulp():
         try:
-            resp = requests.get(API_URL + 'solve_pulp/') #json={"x1": x1, "x2": x2}
+            with open("temp/input_1.json", "r") as file:
+                inp = json.load(file)
+            resp = requests.post(API_URL + 'solve_pulp_2/', json=inp) #json={"x1": x1, "x2": x2}
             resp.raise_for_status()
             data = resp.json()
             result_label.config(text=f"Result: {data["result"]}")
@@ -77,6 +80,7 @@ def test_server():
 
 def create_default_json():
     import json
+    from collections import defaultdict
 
     subject_count = {
         ("A-18-30", "math"): 2,
@@ -106,6 +110,14 @@ def create_default_json():
         for (g, s), c in subject_count.items()
     ]
 
+    subject_count_json = defaultdict(dict)
+
+    for (g, s), c in subject_count.items():
+        subject_count_json[g][s] = c
+
+    # Если нужно получить обычный dict:
+    subject_count_json = dict(subject_count_json)
+
     # структура
     data = {
         "default_count": default_count,
@@ -131,5 +143,5 @@ def create_default_json():
 
 
 #test_pulp()
-#test_server()
-create_default_json()
+test_server()
+#create_default_json()

@@ -18,7 +18,7 @@ class MyPulp:
         self._init_constraints()
 
     def set_json_values(self, json_data):
-        self.subject_count = {(item.group, item.subject): item.count for item in json_data.subject_count}
+        self.subject_count = json_data.subject_count
         self.default_count = json_data.default_count
 
         self.groups = json_data.groups
