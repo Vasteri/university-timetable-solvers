@@ -20,9 +20,12 @@
         "m200"
     ],
     "subject_count": {
-        "count": 1,
-        "group": "A-16-30",
-        "subject": "math"
+        "A-16-30": {
+            "math": 1
+        },
+        "A-18-30": {
+            "math": 2
+        }
     },
     "subject_teachers": {
         "IT": [
