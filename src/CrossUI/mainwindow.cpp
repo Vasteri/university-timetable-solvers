@@ -7,7 +7,7 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
     data = new GlobalDataTransition(this);
-    graphic = new Graphic(this);
+    graphic = new Graphic(this, data);
     tablish = new Tablish(this, data);
     input_data = new InputData(this, data);
     reshator = new Reshator(this, data);

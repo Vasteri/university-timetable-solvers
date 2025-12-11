@@ -1,53 +1,21 @@
 #include "graphic.h"
 #include "ui_graphic.h"
 
-#include <algorithm>
 #include <QFontMetrics>
-#include <QGraphicsRectItem>
 #include <QGraphicsSceneHoverEvent>
-#include <QGraphicsTextItem>
 #include <QJsonDocument>
 #include <QMap>
 #include <QPainter>
 #include <QSet>
 #include <QTime>
 
-namespace {
-class HoverRectItem : public QGraphicsRectItem
-{
-public:
-    HoverRectItem(const QRectF& rect, const QColor& color, const QString& tooltip)
-        : QGraphicsRectItem(rect), baseColor(color)
-    {
-        setBrush(baseColor);
-        setPen(QPen(Qt::black, 1));
-        setAcceptHoverEvents(true);
-        setToolTip(tooltip);
-    }
-
-protected:
-    void hoverEnterEvent(QGraphicsSceneHoverEvent*) override { setBrush(baseColor.lighter(130)); }
-    void hoverLeaveEvent(QGraphicsSceneHoverEvent*) override { setBrush(baseColor); }
-
-private:
-    QColor baseColor;
-};
-
-QString shortText(const QString& src, int maxLen = 10)
-{
-    if (src.size() <= maxLen) {
-        return src;
-    }
-    return src.left(maxLen - 1) + QStringLiteral("…");
-}
-} // namespace
-
-Graphic::Graphic(QWidget *parent)
+Graphic::Graphic(QWidget *parent, GlobalDataTransition* data)
     : QWidget(parent)
     , ui(new Ui::Graphic)
 {
     ui->setupUi(this);
-    api = new ApiClient();
+    this->data = data;
+    init_response_api(ui->but_draw);
 
     sceneGroups = new QGraphicsScene(this);
     sceneTeachers = new QGraphicsScene(this);
@@ -72,27 +40,6 @@ Graphic::Graphic(QWidget *parent)
     ui->verticalLayout->setStretch(0, 0); // панель управления
     ui->verticalLayout->setStretch(1, 1); // вкладки с диаграммами
 
-    connect(ui->but_draw, &QPushButton::clicked, this, [this](){
-        updateStatus(tr("Запрашиваю расписание…"), false);
-        api->get(QUrl("http://127.0.0.1:8000/solve_pulp"));
-    });
-
-    connect(api, &ApiClient::jsonReceived, this, [this](const QJsonObject& obj){
-        QVector<Lesson> lessons;
-        if (!parseSchedule(obj, lessons)) {
-            clearScenes();
-            updateStatus(tr("Не удалось разобрать ответ сервера"), true);
-            return;
-        }
-        renderAll(lessons);
-        updateStatus(tr("Найдено пар: %1").arg(lessons.size()), false);
-    });
-
-    connect(api, &ApiClient::errorOccured, this, [this](const QString& err){
-        clearScenes();
-        updateStatus(err, true);
-    });
-
     clearScenes();
     updateStatus(tr("Нажмите «Построить» для загрузки расписания"), false);
 }
@@ -100,7 +47,37 @@ Graphic::Graphic(QWidget *parent)
 Graphic::~Graphic()
 {
     delete ui;
-    delete api;
+}
+
+void Graphic::init_response_api(QPushButton *but_api) {
+    connect(but_api, &QPushButton::clicked, this, [this](){
+        qDebug() << "1";
+        QJsonObject obj = this->data->GetData();
+        clearScenes();
+        qDebug() << "1.5";
+        if (obj.contains("result") && obj["result"].isArray()) {
+            qDebug() << "2";
+            QVector<Lesson> lessons;
+            if (!parseSchedule(obj, lessons)) {
+                clearScenes();
+                updateStatus(tr("Не удалось разобрать ответ сервера"), true);
+                return;
+            }
+            qDebug() << "2.5";
+            renderAll(lessons);
+            qDebug() << "2.6";
+            updateStatus(tr("Найдено пар: %1").arg(lessons.size()), false);
+        }
+        else if (obj.isEmpty()){
+            qDebug() << "3";
+            updateStatus(QString("Статус: Нет данных"), true);
+        }
+        else {
+            qDebug() << "4";
+            updateStatus(QString("Статус: Incorrect json format"), true);
+        }
+        qDebug() << "end";
+    });
 }
 
 void Graphic::clearScenes()
@@ -119,7 +96,7 @@ void Graphic::clearScenes()
 
 void Graphic::updateStatus(const QString& text, bool isError)
 {
-    ui->lab_info->setStyleSheet(isError ? "color: #b00020;" : "color: #1a1a1a;");
+    ui->lab_info->setStyleSheet(isError ? "color: #b00020;" : "");
     ui->lab_info->setText(text);
 }
 
