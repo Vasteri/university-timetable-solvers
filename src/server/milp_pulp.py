@@ -53,12 +53,15 @@ class MyPulp:
         return schedule
 
     def _init_objective_function(self):
-        # Минимизировать количество пар в первой паре (11:10)
-        self.problem += lpSum(
-            self.x[(g, s, d, "11:10", r, tea)] 
-            for g in self.groups for s in self.subjects for d in self.days 
-            for r in self.rooms for tea in self.subject_teachers[s]
+        # Минимизировать разрывы между парами в один день для группы
+        # Штрафуем случаи, когда у группы есть пары не подряд (например, 9:20 и 13:45, но нет 11:10)
+        gap_penalty = lpSum(
+            self.gap[(g, d, i)]
+            for g in self.groups for d in self.days 
+            for i in range(len(self.times) - 1)
         )
+        
+        self.problem += 100*gap_penalty
 
     def set_default_values(self):
         self.subject_count = {
@@ -120,6 +123,69 @@ class MyPulp:
                         self.x[(g, s, d, tt, r, tea)]
                         for s in self.subjects for r in self.rooms for tea in self.subject_teachers[s]
                     ) <= 1, f"Group_one_{g}_{d}_{tt}"
+        
+        # 5) Связываем переменные y с переменными x
+        # y[(g, d, tt)] = 1, если у группы g есть хотя бы одно занятие в день d во время tt
+        for g in self.groups:
+            for d in self.days:
+                for tt in self.times:
+                    # y >= x для всех комбинаций (s, r, tea)
+                    for s in self.subjects:
+                        for r in self.rooms:
+                            for tea in self.subject_teachers[s]:
+                                self.problem += self.y[(g, d, tt)] >= self.x[(g, s, d, tt, r, tea)], \
+                                    f"Link_y_x_{g}_{d}_{tt}_{s}_{r}_{tea}"
+                    
+                    # y <= сумма всех x (если есть хотя бы одно занятие, y = 1)
+                    self.problem += self.y[(g, d, tt)] <= lpSum(
+                        self.x[(g, s, d, tt, r, tea)]
+                        for s in self.subjects for r in self.rooms for tea in self.subject_teachers[s]
+                    ), f"Link_y_sum_{g}_{d}_{tt}"
+        
+        # 6) Мягкое ограничение: штраф за разрывы между парами
+        # gap[(g, d, i)] = 1, если есть занятие в times[i], нет в times[i+1], но есть в times[i+2] или позже
+        for g in self.groups:
+            for d in self.days:
+                for i in range(len(self.times) - 1):
+                    t_i = self.times[i]
+                    t_i1 = self.times[i + 1]
+                    
+                    # Разрыв возникает, если:
+                    # - есть занятие в t_i (y[t_i] = 1)
+                    # - нет занятия в t_i1 (y[t_i1] = 0)
+                    # - есть хотя бы одно занятие после t_i1
+                    # 
+                    # Используем ограничения:
+                    # gap <= y[t_i] (если нет занятия в t_i, gap = 0)
+                    # gap <= 1 - y[t_i1] (если есть занятие в t_i1, gap = 0)
+                    # gap >= y[t_i] - y[t_i1] + later_slots_sum - num_later_slots
+                    
+                    if i + 2 < len(self.times):
+                        # Есть слоты после t_i1
+                        later_slots_sum = lpSum(
+                            self.y[(g, d, self.times[j])]
+                            for j in range(i + 2, len(self.times))
+                        )
+                        num_later_slots = len(self.times) - i - 2
+                        
+                        # gap <= y[t_i]
+                        self.problem += self.gap[(g, d, i)] <= self.y[(g, d, t_i)], \
+                            f"Gap_upper1_{g}_{d}_{i}"
+                        
+                        # gap <= 1 - y[t_i1]
+                        self.problem += self.gap[(g, d, i)] <= 1 - self.y[(g, d, t_i1)], \
+                            f"Gap_upper2_{g}_{d}_{i}"
+                        
+                        # gap >= y[t_i] - y[t_i1] + later_slots_sum - num_later_slots
+                        # Если y[t_i] = 1, y[t_i1] = 0, и есть хотя бы одно занятие позже:
+                        # gap >= 1 - 0 + 1 - num_later_slots = 2 - num_later_slots
+                        # Для num_later_slots >= 1 это даст gap >= 1 (но gap <= 1, так что gap = 1)
+                        self.problem += self.gap[(g, d, i)] >= \
+                            self.y[(g, d, t_i)] - self.y[(g, d, t_i1)] + later_slots_sum - num_later_slots, \
+                            f"Gap_lower_{g}_{d}_{i}"
+                    else:
+                        # Нет слотов после t_i1, разрыв невозможен
+                        self.problem += self.gap[(g, d, i)] == 0, f"Gap_zero_{g}_{d}_{i}"
 
     def _init_variables(self):
         self.x = {}
@@ -132,6 +198,23 @@ class MyPulp:
                             for tea in allowed_teachers:
                                 varname = f"x_{g}_{d}_{tt}_{r}_{s}_{tea}"
                                 self.x[(g, s, d, tt, r, tea)] = LpVariable(varname, cat="Binary")
+        
+        # Переменные для отслеживания наличия занятий у группы в конкретный день и время
+        self.y = {}
+        for g in self.groups:
+            for d in self.days:
+                for tt in self.times:
+                    varname = f"y_{g}_{d}_{tt}"
+                    self.y[(g, d, tt)] = LpVariable(varname, cat="Binary")
+        
+        # Переменные для штрафа за разрывы между парами (gap)
+        self.gap = {}
+        for g in self.groups:
+            for d in self.days:
+                # Для каждой пары соседних временных слотов
+                for i in range(len(self.times) - 1):
+                    varname = f"gap_{g}_{d}_{i}"
+                    self.gap[(g, d, i)] = LpVariable(varname, cat="Binary")
 
     def solve(self):
         print("Solving...")
