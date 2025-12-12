@@ -1,0 +1,72 @@
+{
+    "days": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+  
+    "default_count": 2,
+  
+    "groups": [
+      "A-01-30", "A-02-30", "A-03-30", "A-04-30", "A-05-30",
+      "A-06-30", "A-07-30", "A-08-30", "A-09-30", "A-10-30",
+      "A-11-30", "A-12-30", "A-13-30", "A-14-30", "A-15-30",
+      "A-16-30", "A-17-30", "A-18-30", "A-19-30", "A-20-30"
+    ],
+  
+    "rooms": [
+      "m200", "m201", "m202", "m203", "m204",
+      "m300", "m301", "m302", "m303", "m304",
+      "m400", "m401", "m402", "m403", "m404",
+      "m500", "m501", "m502", "m503", "m504"
+    ],
+  
+    "subjects": [
+      "math", "physics", "english", "IT", "economic",
+      "biology", "chemistry", "history", "PE", "literature"
+    ],
+  
+    "teachers": [
+      "T1","T2","T3","T4","T5",
+      "T6","T7","T8","T9","T10",
+      "T11","T12","T13","T14","T15",
+      "T16","T17","T18","T19","T20"
+    ],
+  
+    "subject_teachers": {
+      "math": ["T1","T2"],
+      "physics": ["T3","T4"],
+      "english": ["T5","T6"],
+      "IT": ["T7","T8","T9"],
+      "economic": ["T10"],
+      "biology": ["T11","T12"],
+      "chemistry": ["T13"],
+      "history": ["T14"],
+      "PE": ["T15","T16"],
+      "literature": ["T17","T18","T19","T20"]
+    },
+  
+    "subject_count": {
+      "A-01-30": {"math": 2, "IT": 1},
+      "A-02-30": {"physics": 1},
+      "A-03-30": {"english": 2},
+      "A-04-30": {"biology": 1},
+      "A-05-30": {"math": 1},
+      "A-06-30": {"IT": 1},
+      "A-07-30": {"chemistry": 1},
+      "A-08-30": {"literature": 2},
+      "A-09-30": {"economic": 1},
+      "A-10-30": {"PE": 1},
+      "A-11-30": {"history": 1},
+      "A-12-30": {"math": 2},
+      "A-13-30": {"english": 1},
+      "A-14-30": {"physics": 1},
+      "A-15-30": {"chemistry": 1},
+      "A-16-30": {"literature": 1},
+      "A-17-30": {"economic": 1},
+      "A-18-30": {"PE": 1},
+      "A-19-30": {"IT": 2},
+      "A-20-30": {"math": 1, "history": 1}
+    },
+  
+    "times": [
+      "9:20", "11:10", "13:45", "15:35"
+    ]
+  }
+  
