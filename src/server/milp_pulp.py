@@ -53,12 +53,9 @@ class MyPulp:
         return schedule
 
     def _init_objective_function(self):
-        # Минимизировать количество пар в первой паре (11:10)
-        self.problem += lpSum(
-            self.x[(g, s, d, "11:10", r, tea)] 
-            for g in self.groups for s in self.subjects for d in self.days 
-            for r in self.rooms for tea in self.subject_teachers[s]
-        )
+        WINDOW_PENALTY = 10
+        self.problem += WINDOW_PENALTY * lpSum(self.idle.values())
+
 
     def set_default_values(self):
         self.subject_count = {
@@ -88,6 +85,7 @@ class MyPulp:
         for g in self.groups:
             for s in self.subjects:
                 count = self.subject_count.get((g, s), self.default_count)
+                print(count)
                 self.problem += lpSum(
                     self.x[(g, s, d, tt, r, tea)]
                     for d in self.days for tt in self.times for r in self.rooms for tea in self.subject_teachers[s]
@@ -120,6 +118,58 @@ class MyPulp:
                         self.x[(g, s, d, tt, r, tea)]
                         for s in self.subjects for r in self.rooms for tea in self.subject_teachers[s]
                     ) <= 1, f"Group_one_{g}_{d}_{tt}"
+        
+        # есть ли занятие в (g, d, tt)
+        for g in self.groups:
+            for d in self.days:
+                for tt in self.times:
+                    self.problem += (
+                        lpSum(
+                            self.x[(g,s,d,tt,r,tea)]
+                            for s in self.subjects
+                            for r in self.rooms
+                            for tea in self.subject_teachers[s]
+                        )
+                        == self.y[(g,d,tt)]
+                    )      
+ 
+        T = len(self.times)
+
+        for g in self.groups:
+            for d in self.days:
+                for i in range(T):
+                    # has_left = 1 если хотя бы одно занятие слева
+                    if i > 0:
+                        self.problem += self.has_left[(g,d,i)] <= lpSum(self.y[(g,d,self.times[j])] for j in range(0, i))
+                        for j in range(0, i):
+                            self.problem += self.has_left[(g,d,i)] >= self.y[(g,d,self.times[j])]
+                    else:
+                        self.problem += self.has_left[(g,d,i)] == 0
+
+                    # has_right = 1 если хотя бы одно занятие справа
+                    if i < T-1:
+                        self.problem += self.has_right[(g,d,i)] <= lpSum(self.y[(g,d,self.times[j])] for j in range(i+1, T))
+                        for j in range(i+1, T):
+                            self.problem += self.has_right[(g,d,i)] >= self.y[(g,d,self.times[j])]
+                    else:
+                        self.problem += self.has_right[(g,d,i)] == 0
+
+        for g in self.groups:
+            for d in self.days:
+                for i in range(1, T-1):
+                    tt = self.times[i]
+
+                    self.problem += (
+                        self.idle[(g,d,tt)]
+                        >= self.has_left[(g,d,i)]
+                        + self.has_right[(g,d,i)]
+                        - 1
+                        - self.y[(g,d,tt)]
+                    )
+
+
+
+
 
     def _init_variables(self):
         self.x = {}
@@ -132,6 +182,31 @@ class MyPulp:
                             for tea in allowed_teachers:
                                 varname = f"x_{g}_{d}_{tt}_{r}_{s}_{tea}"
                                 self.x[(g, s, d, tt, r, tea)] = LpVariable(varname, cat="Binary")
+        
+        self.y = {}
+        for g in self.groups:
+            for d in self.days:
+                for tt in self.times:
+                    self.y[(g,d,tt)] = LpVariable(f"y_{g}_{d}_{tt}", cat="Binary")
+        
+        self.idle = {}
+        for g in self.groups:
+            for d in self.days:
+                for tt in self.times:
+                    self.idle[(g,d,tt)] = LpVariable(f"idle_{g}_{d}_{tt}", cat="Binary")
+        
+        self.has_left = {}
+        self.has_right = {}
+
+        for g in self.groups:
+            for d in self.days:
+                for i in range(len(self.times)):
+                    self.has_left[(g,d,i)]  = LpVariable(f"has_left_{g}_{d}_{i}",  cat="Binary")
+                    self.has_right[(g,d,i)] = LpVariable(f"has_right_{g}_{d}_{i}", cat="Binary")
+
+
+
+
 
     def solve(self):
         print("Solving...")
