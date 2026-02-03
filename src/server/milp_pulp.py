@@ -1,6 +1,5 @@
-from pulp import LpProblem, LpMinimize, LpVariable, lpSum, LpStatus
+from pulp import LpProblem, LpMinimize, LpVariable, lpSum, LpStatus, PULP_CBC_CMD
 #from pandas import DataFrame
-import pulp
 
 
 class MyPulp:
@@ -59,8 +58,8 @@ class MyPulp:
 
     def set_default_values(self):
         self.subject_count = {
-            ("A-18-30", "math"): 2,
-            ("A-16-30", "math"): 1,
+            "A-18-30": {"math": 2},
+            "A-16-30": {"math": 1},
         }
 
         self.default_count = 2
@@ -84,8 +83,7 @@ class MyPulp:
         # 1) Для всех (g, s) задать нужное количество занятий в неделю
         for g in self.groups:
             for s in self.subjects:
-                count = self.subject_count.get((g, s), self.default_count)
-                print(count)
+                count = self.subject_count.get(g, dict()).get(s, self.default_count)
                 self.problem += lpSum(
                     self.x[(g, s, d, tt, r, tea)]
                     for d in self.days for tt in self.times for r in self.rooms for tea in self.subject_teachers[s]
@@ -119,7 +117,7 @@ class MyPulp:
                         for s in self.subjects for r in self.rooms for tea in self.subject_teachers[s]
                     ) <= 1, f"Group_one_{g}_{d}_{tt}"
         
-        # есть ли занятие в (g, d, tt)
+        # есть ли занятие в (группа, день, время)
         for g in self.groups:
             for d in self.days:
                 for tt in self.times:
@@ -154,6 +152,7 @@ class MyPulp:
                     else:
                         self.problem += self.has_right[(g,d,i)] == 0
 
+        # если есть занятия слева и справа, но в этот момент нет занятия, то это окно
         for g in self.groups:
             for d in self.days:
                 for i in range(1, T-1):
@@ -168,10 +167,8 @@ class MyPulp:
                     )
 
 
-
-
-
     def _init_variables(self):
+        # пары (группа, предмет, день, время, аудитория, преподаватель) - есть ли занятие
         self.x = {}
         for g in self.groups:
             for d in self.days:
@@ -183,18 +180,21 @@ class MyPulp:
                                 varname = f"x_{g}_{d}_{tt}_{r}_{s}_{tea}"
                                 self.x[(g, s, d, tt, r, tea)] = LpVariable(varname, cat="Binary")
         
+        # пары (группа, день, время) - есть ли занятие
         self.y = {}
         for g in self.groups:
             for d in self.days:
                 for tt in self.times:
                     self.y[(g,d,tt)] = LpVariable(f"y_{g}_{d}_{tt}", cat="Binary")
         
+        # окна между парами (является ли окном)
         self.idle = {}
         for g in self.groups:
             for d in self.days:
                 for tt in self.times:
                     self.idle[(g,d,tt)] = LpVariable(f"idle_{g}_{d}_{tt}", cat="Binary")
         
+        # наличие занятий до и после для текущего дня в данное время
         self.has_left = {}
         self.has_right = {}
 
@@ -205,12 +205,9 @@ class MyPulp:
                     self.has_right[(g,d,i)] = LpVariable(f"has_right_{g}_{d}_{i}", cat="Binary")
 
 
-
-
-
     def solve(self):
         print("Solving...")
-        status = self.problem.solve(pulp.PULP_CBC_CMD(msg=True))
+        status = self.problem.solve(PULP_CBC_CMD(msg=True))
         print("Status:", LpStatus[self.problem.status])
 
         self.assigned = []
