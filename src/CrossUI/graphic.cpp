@@ -36,6 +36,23 @@ Graphic::Graphic(QWidget *parent, GlobalDataTransition* data)
     ui->view_teachers->setScene(sceneTeachers);
     ui->view_rooms->setScene(sceneRooms);
 
+    // масштабирование: кнопки + и -
+    const double zoomFactorIn  = 1.2;
+    const double zoomFactorOut = 1.0 / zoomFactorIn;
+
+    auto applyZoom = [this](double factor){
+        ui->view_groups->scale(factor, factor);
+        ui->view_teachers->scale(factor, factor);
+        ui->view_rooms->scale(factor, factor);
+    };
+
+    connect(ui->but_zoom_in, &QPushButton::clicked, this, [applyZoom, zoomFactorIn](){
+        applyZoom(zoomFactorIn);
+    });
+    connect(ui->but_zoom_out, &QPushButton::clicked, this, [applyZoom, zoomFactorOut](){
+        applyZoom(zoomFactorOut);
+    });
+
     // растягиваем таб с диаграммой на всё доступное пространство
     ui->verticalLayout->setStretch(0, 0); // панель управления
     ui->verticalLayout->setStretch(1, 1); // вкладки с диаграммами
