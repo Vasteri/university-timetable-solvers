@@ -363,10 +363,33 @@ void Graphic::renderDiagram(QGraphicsScene* scene,
         auto rectItem = new HoverRectItem(QRectF(startX, startY, slotWidth, slotHeight), color, tooltip);
         scene->addItem(rectItem);
 
-        auto textItem = scene->addText(shortText(l.subject, 14));
-        QRectF br = textItem->boundingRect();
-        textItem->setPos(startX + slotWidth / 2.0 - br.width() / 2.0,
-                         startY + slotHeight / 2.0 - br.height() / 2.0);
+        // Нужно ли показывать ФИО преподавателя в ячейке
+        const bool isTeachersTab = (scene == sceneTeachers);
+
+        const QString subjectText  = shortText(l.subject, 14);
+        const QString teacherText  = shortText(l.teacher, 14);
+
+        // Отдельный текстовый элемент для предмета
+        auto subjectItem = scene->addText(subjectText);
+        QRectF brSub = subjectItem->boundingRect();
+        double subjectY;
+        if (isTeachersTab) {
+            // во вкладке «Преподаватели» центрируем предмет по вертикали
+            subjectY = startY + slotHeight / 2.0 - brSub.height() / 2.0;
+        } else {
+            // в остальных вкладках оставляем место под преподавателя
+            subjectY = startY + slotHeight / 2.0 - brSub.height();
+        }
+        subjectItem->setPos(startX + slotWidth / 2.0 - brSub.width() / 2.0,
+                            subjectY);
+
+        // Отдельный текстовый элемент для преподавателя — только не во вкладке «Преподаватели»
+        if (!isTeachersTab) {
+            auto teacherItem = scene->addText(teacherText);
+            QRectF brTeach = teacherItem->boundingRect();
+            teacherItem->setPos(startX + slotWidth / 2.0 - brTeach.width() / 2.0,
+                                startY + slotHeight / 2.0);
+        }
     }
 
     // ось времени снизу
