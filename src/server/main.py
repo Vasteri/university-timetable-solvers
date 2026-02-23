@@ -30,6 +30,8 @@ class GAParams(BaseModel):
     mutation_rate: float = 0.01
     elite_size: int = 50
     tournament_size: int = 12
+    local_search_rate: float = 0.3
+    local_search_attempts: int = 15
     seed: Optional[int] = None
     verbose: bool = True
 
@@ -75,6 +77,8 @@ def solve(input: SolveRequest):
         mutation_rate=params.mutation_rate,
         elite_size=params.elite_size,
         tournament_size=params.tournament_size,
+        local_search_rate=params.local_search_rate,
+        local_search_attempts=params.local_search_attempts,
         random_seed=params.seed,
         verbose=params.verbose,
     )

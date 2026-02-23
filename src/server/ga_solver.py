@@ -202,6 +202,49 @@ class ScheduleOptimizer:
                 chromosome[i, 2] = rng.integers(0, R)
                 chromosome[i, 3] = rng.choice(self._allowed_teachers_per_subject[s])
 
+    def _local_search(
+        self,
+        rng: np.random.Generator,
+        chromosome: np.ndarray,
+        max_attempts: int = 20,
+    ) -> np.ndarray:
+        """
+        Локальный поиск (hill climbing) после мутации.
+        Делает до max_attempts проб локальных изменений и принимает только улучшающие.
+        """
+        if max_attempts <= 0:
+            return chromosome
+
+        D = len(self.problem.days)
+        Tm = len(self.problem.times)
+        R = len(self.problem.rooms)
+
+        current = chromosome.copy()
+        current_penalty = self._fitness_penalty(current)
+
+        for _ in range(max_attempts):
+            neighbor = current.copy()
+
+            i = int(rng.integers(0, neighbor.shape[0]))
+            move_type = int(rng.integers(0, 4))
+
+            if move_type == 0:
+                neighbor[i, 0] = rng.integers(0, D)
+            elif move_type == 1:
+                neighbor[i, 1] = rng.integers(0, Tm)
+            elif move_type == 2:
+                neighbor[i, 2] = rng.integers(0, R)
+            else:
+                s = int(self.class_subjects_[i])
+                neighbor[i, 3] = rng.choice(self._allowed_teachers_per_subject[s])
+
+            neighbor_penalty = self._fitness_penalty(neighbor)
+
+            if neighbor_penalty < current_penalty:
+                current, current_penalty = neighbor, neighbor_penalty
+
+        return current
+
     def _random_population(self, rng: np.random.Generator, pop_size: int) -> np.ndarray:
         D = len(self.problem.days)
         Tm = len(self.problem.times)
@@ -233,6 +276,8 @@ class ScheduleOptimizer:
         mutation_rate: float = 0.02,
         elite_size: int = 20,
         tournament_size: int = 7,
+        local_search_rate: float = 0.3,
+        local_search_attempts: int = 15,
         random_seed: Optional[int] = None,
         verbose: bool = True,
     ) -> "ScheduleOptimizer":
@@ -244,6 +289,7 @@ class ScheduleOptimizer:
             raise ValueError("mutation_rate must be in [0, 1]")
         elite_size = int(max(0, min(elite_size, pop_size)))
         tournament_size = int(max(2, tournament_size))
+        local_search_attempts = int(max(0, local_search_attempts))
 
         rng = np.random.default_rng(random_seed)
         population = self._random_population(rng, pop_size)
@@ -290,6 +336,12 @@ class ScheduleOptimizer:
 
                 self._mutate(rng, child1, mutation_rate)
                 self._mutate(rng, child2, mutation_rate)
+
+                if local_search_rate > 0.0 and local_search_attempts > 0:
+                    if rng.random() < local_search_rate:
+                        child1 = self._local_search(rng, child1, max_attempts=local_search_attempts)
+                    if rng.random() < local_search_rate:
+                        child2 = self._local_search(rng, child2, max_attempts=local_search_attempts)
 
                 new_population[cur] = child1
                 cur += 1

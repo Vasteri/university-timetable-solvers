@@ -24,6 +24,8 @@ Reshator::Reshator(QWidget *parent, GlobalDataTransition* data)
             ga.insert("mutation_rate", ui->dspin_mutation->value());
             ga.insert("elite_size", ui->spin_elite->value());
             ga.insert("tournament_size", ui->spin_tournament->value());
+            ga.insert("local_search_rate", ui->dspin_local_search_rate->value());
+            ga.insert("local_search_attempts", ui->spin_local_search_attempts->value());
             int seed = ui->spin_seed->value();
             if (seed >= 0) {
                 ga.insert("seed", seed);
