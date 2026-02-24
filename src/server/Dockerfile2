@@ -1,4 +1,4 @@
-FROM python:3.11-slim AS build-env
+FROM python:3.11-slim-bookworm AS build-env
 
 WORKDIR /app
 
@@ -6,7 +6,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt --target=/app/site-packages --only-binary=:all:
 
 
-FROM gcr.io/distroless/python3
+FROM gcr.io/distroless/python3-debian12
 
 COPY --from=build-env /app/site-packages /app/site-packages
 ENV PYTHONPATH=/app/site-packages

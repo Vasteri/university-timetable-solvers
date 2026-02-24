@@ -60,10 +60,11 @@ class MyPulp:
         return schedule
 
     def _init_objective_function(self):
-        WINDOW_PENALTY = 10
+        WINDOW_PENALTY = 1000
         self.problem += (
             WINDOW_PENALTY * lpSum(self.idle.values())
           + WINDOW_PENALTY * lpSum(self.idle_t.values())
+          + lpSum(self.workload_teachers.values())
         )
 
 
@@ -226,9 +227,27 @@ class MyPulp:
                         - 1
                         - self.y_t[(t,d,tt)]
                     )
+        
+        # 7) Нагрузка на преподавателей (не более 3 пар)
+        for tea in self.teachers:
+            for d in self.days:
+                self.problem += lpSum(
+                        self.x[(g, s, d, tt, r, tea)]
+                        for tt in self.times
+                        for g in self.groups
+                        for r in self.rooms  
+                        for s in self.teacher_subjects[tea]
+                    ) == self.workload_teachers[(tea, d)]
 
 
     def _init_variables(self):
+        # штраф для нагрузки учителей
+        self.workload_teachers = {}
+        for tea in self.teachers:
+            for d in self.days:
+                varname = f"w_{tea}_{d}"
+                self.workload_teachers[(tea, d)] = LpVariable(varname, cat="LpInteger")
+
         # пары (группа, предмет, день, время, аудитория, преподаватель) - есть ли занятие
         self.x = {}
         for g in self.groups:
