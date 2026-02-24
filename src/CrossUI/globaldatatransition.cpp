@@ -40,7 +40,13 @@ void GlobalDataTransition::SendData(const QJsonObject& extra) {
         for (auto it = extra.begin(); it != extra.end(); ++it) {
             payload.insert(it.key(), it.value());
         }
-        api->postJson(QUrl("http://" + ip + ":8000/solve"), payload);
+        QString endpoint = "";
+        if (payload["method"] == "milp") {
+            endpoint = "solve_pulp";
+        } else {
+            endpoint = "solve_genetic";
+        }
+        api->postJson(QUrl("http://" + ip + ":8000/" + endpoint), payload);
     }
     else {
         status = 1;

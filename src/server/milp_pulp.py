@@ -1,10 +1,11 @@
 from pulp import LpProblem, LpMinimize, LpVariable, lpSum, LpStatus, PULP_CBC_CMD
 from collections import defaultdict
+from schemas import InputData
 #from pandas import DataFrame
 
 
 class MyPulp:
-    def __init__(self, json_data=None):
+    def __init__(self, json_data:InputData = None):
         if not(json_data is None):
             self.set_json_values(json_data)
         else:
@@ -17,7 +18,7 @@ class MyPulp:
         self._init_objective_function()
         self._init_constraints()
 
-    def set_json_values(self, json_data):
+    def set_json_values(self, json_data:InputData):
         self.subject_count = json_data.subject_count
         self.default_count = json_data.default_count
 
@@ -37,7 +38,7 @@ class MyPulp:
 
         self.teacher_subjects = dict(self.teacher_subjects)
 
-    def get_json(self):
+    def get_json_dict(self):
         schedule = [
             {
                 "group": g,
@@ -51,7 +52,7 @@ class MyPulp:
         ]
         return schedule
     
-    def get_json_2(self):
+    def get_json_list(self):
         schedule = [["group", "day", "time", "subject", "room", "teacher"]]
         schedule += [
             [ g, d, t, s, r, tea ]
