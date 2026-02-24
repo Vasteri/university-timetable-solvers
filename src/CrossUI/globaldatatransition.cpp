@@ -33,11 +33,14 @@ void GlobalDataTransition::SetData(const QJsonObject& obj) {
     input_data = obj;
 }
 
-void GlobalDataTransition::SendData() {
+void GlobalDataTransition::SendData(const QJsonObject& extra) {
     if (!input_data.isEmpty()) {
         message = "Запрос...";
-        //api->get(QUrl("http://" + ip + ":8000"));
-        api->postJson(QUrl("http://" + ip + ":8000/solve_pulp_2"), input_data);
+        QJsonObject payload = input_data;
+        for (auto it = extra.begin(); it != extra.end(); ++it) {
+            payload.insert(it.key(), it.value());
+        }
+        api->postJson(QUrl("http://" + ip + ":8000/solve"), payload);
     }
     else {
         status = 1;
