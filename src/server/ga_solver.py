@@ -132,17 +132,21 @@ class ScheduleOptimizer:
             s = int(self.class_subjects_[i])
             t = int(teachers[i])
             if self.allowed_[s, t] == 0:
-                penalty += 10
+                penalty += 10_000
 
         for g in range(G):
             idx = np.nonzero(self.class_groups_ == g)[0]
             g_days = days[idx]
             g_times = times[idx]
             slots = np.stack([g_days, g_times], axis=1)
-            penalty += 20 * self._count_conflicts(slots)
+            penalty += 10_000 * self._count_conflicts(slots)
 
             for d in range(D):
-                penalty += 5 * self._count_gaps_for_group_on_day(g_times, g_days, d)
+                penalty += 1 * self._count_gaps_for_group_on_day(g_times, g_days, d)
+
+            unique_days = np.unique(g_days)
+            if unique_days.size > 1:
+                penalty += 1 * np.max(((unique_days.size - 3), 0))
 
         for r in range(R):
             idx = np.nonzero(rooms == r)[0]
@@ -151,7 +155,7 @@ class ScheduleOptimizer:
             r_days = days[idx]
             r_times = times[idx]
             slots = np.stack([r_days, r_times], axis=1)
-            penalty += 20 * self._count_conflicts(slots)
+            penalty += 10_000 * self._count_conflicts(slots)
 
         for t in range(Tch):
             idx = np.nonzero(teachers == t)[0]
@@ -160,7 +164,10 @@ class ScheduleOptimizer:
             t_days = days[idx]
             t_times = times[idx]
             slots = np.stack([t_days, t_times], axis=1)
-            penalty += 20 * self._count_conflicts(slots)
+            penalty += 10_000 * self._count_conflicts(slots)
+
+            for d in range(D):
+                penalty += 1 * self._count_gaps_for_group_on_day(t_times, t_days, d)
 
         return int(penalty)
 
