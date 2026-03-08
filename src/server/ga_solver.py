@@ -1,22 +1,10 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Union
 
 import numpy as np
 
-
-@dataclass(frozen=True)
-class ProblemData:
-    days: List[str]
-    times: List[str]
-    rooms: List[str]
-    groups: List[str]
-    subjects: List[str]
-    teachers: List[str]
-    default_count: int
-    subject_count: Dict[str, Dict[str, int]]
-    subject_teachers: Dict[str, List[str]]
+from schemas import InputData
 
 
 class ScheduleOptimizer:
@@ -27,7 +15,7 @@ class ScheduleOptimizer:
     Выход: таблица (list[list[str]]) в формате, совместимом с MyPulp.get_json_2().
     """
 
-    def __init__(self, raw: Dict) -> None:
+    def __init__(self, raw: Union[InputData, Dict]) -> None:
         self.problem = self._parse_input(raw)
         self.class_groups_, self.class_subjects_ = self._build_class_list()
         self.allowed_ = self._build_allowed_matrix()
@@ -38,18 +26,10 @@ class ScheduleOptimizer:
         self.best_penalty_: Optional[int] = None
         self.history_: List[int] = []
 
-    def _parse_input(self, raw: Dict) -> ProblemData:
-        return ProblemData(
-            days=list(raw["days"]),
-            times=list(raw["times"]),
-            rooms=list(raw["rooms"]),
-            groups=list(raw["groups"]),
-            subjects=list(raw["subjects"]),
-            teachers=list(raw["teachers"]),
-            default_count=int(raw.get("default_count", 0)),
-            subject_count=dict(raw["subject_count"]),
-            subject_teachers={k: list(v) for k, v in dict(raw["subject_teachers"]).items()},
-        )
+    def _parse_input(self, raw: Union[InputData, Dict]) -> InputData:
+        if isinstance(raw, InputData):
+            return raw
+        return InputData(**raw)
 
     def _build_class_list(self) -> Tuple[np.ndarray, np.ndarray]:
         p = self.problem
