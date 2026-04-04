@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Set, Tuple, Union
 
 import numpy as np
 
@@ -21,6 +21,10 @@ class ScheduleOptimizer:
         self.allowed_ = self._build_allowed_matrix()
         self.n_classes_ = int(self.class_groups_.shape[0])
         self._allowed_teachers_per_subject = self._build_allowed_teachers_per_subject()
+        self._classes_by_group = self._build_classes_by_group()
+        self._n_day_time_slots = len(self.problem.days) * len(self.problem.times)
+        self._all_slot_ids = np.arange(self._n_day_time_slots, dtype=np.int32)
+        self._assert_group_slot_capacity()
 
         self.best_chromosome_: Optional[np.ndarray] = None
         self.best_penalty_: Optional[int] = None
@@ -77,11 +81,124 @@ class ScheduleOptimizer:
             result.append(idx)
         return result
 
+    def _build_classes_by_group(self) -> List[List[int]]:
+        G = len(self.problem.groups)
+        buckets: List[List[int]] = [[] for _ in range(G)]
+        for i in range(self.n_classes_):
+            buckets[int(self.class_groups_[i])].append(i)
+        return buckets
+
+    def _assert_group_slot_capacity(self) -> None:
+        """Уникальные (день, время) в группе: нужно не больше слотов D×Tm."""
+        for g, idxs in enumerate(self._classes_by_group):
+            if len(idxs) > self._n_day_time_slots:
+                raise ValueError(
+                    f"Группа «{self.problem.groups[g]}»: занятий {len(idxs)}, "
+                    f"а уникальных слотов день×время только {self._n_day_time_slots}"
+                )
+
+    def _build_feasible_chromosome(
+        self, rng: np.random.Generator, max_restarts: int = 50_000
+    ) -> np.ndarray:
+        """
+        Случайная хромосома, удовлетворяющая жёстким ограничениям:
+        учитель ∈ допустимых для предмета; в группе нет двух пар в один слот;
+        аудитория и преподаватель не заняты в этот слот (глобально по особи).
+        """
+        Tm = len(self.problem.times)
+        R = len(self.problem.rooms)
+        Tch = len(self.problem.teachers)
+        n = self.n_classes_
+        slot_mult = Tm
+        cbg = self._classes_by_group
+
+        for _ in range(max_restarts):
+            chrom = np.zeros((n, 4), dtype=np.int16)
+            room_at_slot: Dict[int, Set[int]] = {}
+            teacher_busy: List[Set[int]] = [set() for _ in range(Tch)]
+
+            groups_order = np.arange(len(cbg), dtype=np.int32)
+            rng.shuffle(groups_order)
+
+            failed = False
+            for g in groups_order:
+                indices = cbg[int(g)]
+                if not indices: continue
+
+                indices = indices[:]
+                rng.shuffle(indices)
+    
+                available = self._all_slot_ids.copy()
+                rng.shuffle(available)
+                available_list = available.tolist()
+
+                for idx in indices:
+                    s = int(self.class_subjects_[idx])
+                    allowed_arr = self._allowed_teachers_per_subject[s]
+
+                    placed = False
+                    rng.shuffle(available_list)
+
+                    for sid in available_list:
+                        sid = int(sid)
+                        d = sid // slot_mult
+                        t = sid % slot_mult
+
+                        rooms_taken = room_at_slot.get(sid)
+                        if rooms_taken is None:
+                            r = int(rng.integers(0, R))
+                        else:
+                            if len(rooms_taken) >= R:
+                                continue
+                            cand_r = [rr for rr in range(R) if rr not in rooms_taken]
+                            r = int(rng.choice(cand_r))
+
+                        teach_candidates: List[int] = []
+                        for te in allowed_arr:
+                            te_i = int(te)
+                            if sid not in teacher_busy[te_i]:
+                                teach_candidates.append(te_i)
+                        if not teach_candidates:
+                            continue
+
+                        teach = int(rng.choice(teach_candidates))
+
+                        chrom[idx, 0] = d
+                        chrom[idx, 1] = t
+                        chrom[idx, 2] = r
+                        chrom[idx, 3] = teach
+
+                        if rooms_taken is None:
+                            room_at_slot[sid] = {r}
+                        else:
+                            rooms_taken.add(r)
+                        teacher_busy[teach].add(sid)
+                        available_list.remove(sid)
+                        placed = True
+                        break
+
+                    if not placed:
+                        failed = True
+                        break
+                if failed:
+                    break
+
+            if not failed:
+                return chrom
+
+        raise RuntimeError(
+            "Не удалось за отведённое число попыток собрать особь без нарушений жёстких ограничений. "
+            "Проверьте данные: слоты день×время, число аудиторий и загрузку преподавателей."
+        )
+
     @staticmethod
-    def _count_conflicts(slots: np.ndarray) -> int:
+    def _count_conflicts(slots: np.ndarray, n_times: int) -> int:
         if slots.shape[0] <= 1:
             return 0
-        encoded = slots[:, 0] * 16_384 + slots[:, 1]
+        # int16 в хромосоме: day * 16384 + time даёт переполнение при day >= 2 → ложные конфликты
+        d = slots[:, 0].astype(np.int64, copy=False)
+        tm = slots[:, 1].astype(np.int64, copy=False)
+        encoded = d * int(n_times) + tm
         _, counts = np.unique(encoded, return_counts=True)
         return int(np.sum(counts[counts > 1] - 1))
 
@@ -102,6 +219,7 @@ class ScheduleOptimizer:
         teachers = chromosome[:, 3]
 
         D = len(self.problem.days)
+        Tm = len(self.problem.times)
         R = len(self.problem.rooms)
         Tch = len(self.problem.teachers)
         G = len(self.problem.groups)
@@ -119,7 +237,7 @@ class ScheduleOptimizer:
             g_days = days[idx]
             g_times = times[idx]
             slots = np.stack([g_days, g_times], axis=1)
-            penalty += 10_000 * self._count_conflicts(slots)
+            penalty += 10_000 * self._count_conflicts(slots, Tm)
 
             for d in range(D):
                 penalty += 1 * self._count_gaps_for_group_on_day(g_times, g_days, d)
@@ -135,7 +253,7 @@ class ScheduleOptimizer:
             r_days = days[idx]
             r_times = times[idx]
             slots = np.stack([r_days, r_times], axis=1)
-            penalty += 10_000 * self._count_conflicts(slots)
+            penalty += 10_000 * self._count_conflicts(slots, Tm)
 
         for t in range(Tch):
             idx = np.nonzero(teachers == t)[0]
@@ -144,7 +262,7 @@ class ScheduleOptimizer:
             t_days = days[idx]
             t_times = times[idx]
             slots = np.stack([t_days, t_times], axis=1)
-            penalty += 10_000 * self._count_conflicts(slots)
+            penalty += 10_000 * self._count_conflicts(slots, Tm)
 
             for d in range(D):
                 penalty += 1 * self._count_gaps_for_group_on_day(t_times, t_days, d)
@@ -232,26 +350,19 @@ class ScheduleOptimizer:
 
         return current
 
-    def _random_population(self, rng: np.random.Generator, pop_size: int) -> np.ndarray:
-        D = len(self.problem.days)
-        Tm = len(self.problem.times)
-        R = len(self.problem.rooms)
+    def _feasible_population(
+        self,
+        rng: np.random.Generator,
+        pop_size: int,
+        *,
+        max_restarts_per_individual: int = 10_000,
+    ) -> np.ndarray:
         n = self.n_classes_
-
         population = np.empty((pop_size, n, 4), dtype=np.int16)
-
         for i in range(pop_size):
-            days = rng.integers(0, D, size=n, dtype=np.int16)
-            times = rng.integers(0, Tm, size=n, dtype=np.int16)
-            rooms = rng.integers(0, R, size=n, dtype=np.int16)
-
-            teachers = np.empty(n, dtype=np.int16)
-            for ci in range(n):
-                s = int(self.class_subjects_[ci])
-                teachers[ci] = rng.choice(self._allowed_teachers_per_subject[s])
-
-            population[i] = np.stack([days, times, rooms, teachers], axis=1)
-
+            population[i] = self._build_feasible_chromosome(
+                rng, max_restarts=max_restarts_per_individual
+            )
         return population
 
     def fit(
@@ -267,6 +378,7 @@ class ScheduleOptimizer:
         local_search_attempts: int = 15,
         random_seed: Optional[int] = None,
         verbose: bool = True,
+        feasible_init_max_restarts: int = 10_000,
     ) -> "ScheduleOptimizer":
         if pop_size < 2:
             raise ValueError("pop_size must be >= 2")
@@ -277,9 +389,12 @@ class ScheduleOptimizer:
         elite_size = int(max(0, min(elite_size, pop_size)))
         tournament_size = int(max(2, tournament_size))
         local_search_attempts = int(max(0, local_search_attempts))
+        feasible_init_max_restarts = int(max(1, feasible_init_max_restarts))
 
         rng = np.random.default_rng(random_seed)
-        population = self._random_population(rng, pop_size)
+        population = self._feasible_population(
+            rng, pop_size, max_restarts_per_individual=feasible_init_max_restarts
+        )
 
         best_chromosome = None
         best_penalty = None
@@ -370,4 +485,3 @@ class ScheduleOptimizer:
         time_index = {t: i for i, t in enumerate(p.times)}
         rows[1:] = sorted(rows[1:], key=lambda r: (r[0], day_index[r[1]], time_index[r[2]]))
         return rows
-
