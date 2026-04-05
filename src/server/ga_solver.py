@@ -366,13 +366,13 @@ class ScheduleOptimizer:
         gaps = np.diff(sorted_times) - 1
         return int(np.sum(gaps[gaps > 0]))
 
-    def _fitness_penalty(self, chromosome: np.ndarray) -> int:
+    def _hard_penalty_value(self, chromosome: np.ndarray) -> int:
+        """Только жёсткие нарушения (множитель 10_000). Быстрая проверка после кроссовера."""
         days = chromosome[:, 0]
         times = chromosome[:, 1]
         rooms = chromosome[:, 2]
         teachers = chromosome[:, 3]
 
-        D = len(self.problem.days)
         Tm = len(self.problem.times)
         R = len(self.problem.rooms)
         Tch = len(self.problem.teachers)
@@ -393,13 +393,6 @@ class ScheduleOptimizer:
             slots = np.stack([g_days, g_times], axis=1)
             penalty += 10_000 * self._count_conflicts(slots, Tm)
 
-            for d in range(D):
-                penalty += 1 * self._count_gaps_for_group_on_day(g_times, g_days, d)
-
-            unique_days = np.unique(g_days)
-            if unique_days.size > 1:
-                penalty += 1 * np.max(((unique_days.size - 3), 0))
-
         for r in range(R):
             idx = np.nonzero(rooms == r)[0]
             if idx.size <= 1:
@@ -418,10 +411,44 @@ class ScheduleOptimizer:
             slots = np.stack([t_days, t_times], axis=1)
             penalty += 10_000 * self._count_conflicts(slots, Tm)
 
+        return int(penalty)
+
+    def _soft_penalty_value(self, chromosome: np.ndarray) -> int:
+        days = chromosome[:, 0]
+        times = chromosome[:, 1]
+        teachers = chromosome[:, 3]
+
+        D = len(self.problem.days)
+        Tch = len(self.problem.teachers)
+        G = len(self.problem.groups)
+
+        penalty = 0
+
+        for g in range(G):
+            idx = np.nonzero(self.class_groups_ == g)[0]
+            g_days = days[idx]
+            g_times = times[idx]
+
+            for d in range(D):
+                penalty += 1 * self._count_gaps_for_group_on_day(g_times, g_days, d)
+
+            unique_days = np.unique(g_days)
+            if unique_days.size > 1:
+                penalty += 1 * np.max(((unique_days.size - 3), 0))
+
+        for t in range(Tch):
+            idx = np.nonzero(teachers == t)[0]
+            if idx.size <= 1:
+                continue
+            t_days = days[idx]
+            t_times = times[idx]
             for d in range(D):
                 penalty += 1 * self._count_gaps_for_group_on_day(t_times, t_days, d)
 
         return int(penalty)
+
+    def _fitness_penalty(self, chromosome: np.ndarray) -> int:
+        return int(self._hard_penalty_value(chromosome) + self._soft_penalty_value(chromosome))
 
     def _evaluate_population(self, population: np.ndarray) -> np.ndarray:
         n = population.shape[0]
@@ -436,16 +463,70 @@ class ScheduleOptimizer:
         idx = rng.integers(0, n, size=k)
         return int(idx[np.argmin(penalties[idx])])
 
-    @staticmethod
-    def _crossover(
-        rng: np.random.Generator, parent1: np.ndarray, parent2: np.ndarray
+    def _repair_crossover_quick(
+        self,
+        rng: np.random.Generator,
+        chromosome: np.ndarray,
+        focus_indices: np.ndarray,
+        max_attempts: int,
+    ) -> None:
+        """Несколько допустимых мутаций; чаще трогаем гены из подмешанных групп."""
+        n = chromosome.shape[0]
+        if focus_indices.size == 0:
+            focus_indices = np.arange(n, dtype=np.int32)
+        for _ in range(max_attempts):
+            if self._hard_penalty_value(chromosome) == 0:
+                return
+            if rng.random() < 0.7 and focus_indices.size > 0:
+                i = int(rng.choice(focus_indices))
+            else:
+                i = int(rng.integers(0, n))
+            self._mutate_one_gene_feasible(rng, chromosome, i)
+
+    def _crossover_feasible_light(
+        self,
+        rng: np.random.Generator,
+        parent1: np.ndarray,
+        parent2: np.ndarray,
+        *,
+        max_repair_attempts: int,
     ) -> Tuple[np.ndarray, np.ndarray]:
+        """
+        Лёгкий кроссовер: комплементарный обмен несколькими целыми группами,
+        короткий repair, при неудаче — копия родителя (всегда допустимо).
+        """
         n = parent1.shape[0]
         if n < 2:
             return parent1.copy(), parent2.copy()
-        point = int(rng.integers(1, n))
-        child1 = np.vstack([parent1[:point], parent2[point:]])
-        child2 = np.vstack([parent2[:point], parent1[point:]])
+
+        Gn = len(self._classes_by_group)
+        if Gn < 1:
+            return parent1.copy(), parent2.copy()
+
+        k = int(rng.integers(1, max(2, min(4, Gn + 1))))
+        k = min(k, Gn)
+        groups_pick = rng.choice(Gn, size=k, replace=False)
+
+        focus: List[int] = []
+        for g in groups_pick:
+            focus.extend(self._classes_by_group[int(g)])
+        focus_arr = np.array(focus, dtype=np.int32) if focus else np.arange(n, dtype=np.int32)
+
+        child1 = parent1.copy()
+        child2 = parent2.copy()
+        for g in groups_pick:
+            gg = int(g)
+            for idx in self._classes_by_group[gg]:
+                child1[idx] = parent2[idx]
+                child2[idx] = parent1[idx]
+
+        self._repair_crossover_quick(rng, child1, focus_arr, max_repair_attempts)
+        self._repair_crossover_quick(rng, child2, focus_arr, max_repair_attempts)
+
+        if self._hard_penalty_value(child1) > 0:
+            child1 = parent1.copy()
+        if self._hard_penalty_value(child2) > 0:
+            child2 = parent2.copy()
         return child1, child2
 
     def _mutate(self, rng: np.random.Generator, chromosome: np.ndarray, mutation_rate: float) -> None:
@@ -538,10 +619,12 @@ class ScheduleOptimizer:
             penalties = self._evaluate_population(population)
 
             gen_best_idx = int(np.argmin(penalties))
+            gen_worst_idx = int(np.argmax(penalties))
             gen_best_penalty = int(penalties[gen_best_idx])
+            gen_worst_penalty = int(penalties[gen_worst_idx])
             history.append(gen_best_penalty)
 
-            print(f"{gen} - {gen_best_penalty}")
+            print(f"{gen} - {gen_best_penalty} - {gen_worst_penalty}")
 
             # if verbose:
             #     print(f"{gen} - {gen_best_penalty}")
