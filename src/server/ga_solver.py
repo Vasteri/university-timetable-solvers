@@ -123,11 +123,11 @@ class ScheduleOptimizer:
             failed = False
             for g in groups_order:
                 indices = cbg[int(g)]
-                if not indices: continue
-
+                if not indices:
+                    continue
                 indices = indices[:]
                 rng.shuffle(indices)
-    
+
                 available = self._all_slot_ids.copy()
                 rng.shuffle(available)
                 available_list = available.tolist()
@@ -190,6 +190,160 @@ class ScheduleOptimizer:
             "Не удалось за отведённое число попыток собрать особь без нарушений жёстких ограничений. "
             "Проверьте данные: слоты день×время, число аудиторий и загрузку преподавателей."
         )
+
+    @staticmethod
+    def _slot_id(day: int, time_idx: int, n_times: int) -> int:
+        return int(day) * int(n_times) + int(time_idx)
+
+    def _pick_feasible_tuple_at_slot(
+        self,
+        rng: np.random.Generator,
+        chromosome: np.ndarray,
+        sid: int,
+        subject_idx: int,
+        skip: Set[int],
+        n_times: int,
+        n_rooms: int,
+    ) -> Optional[Tuple[int, int, int, int]]:
+        """Случайный допустимый (день, время, аудитория, учитель) для предмета в слоте sid; skip — индексы не учитывать."""
+        d = sid // n_times
+        tm = sid % n_times
+        taken_r: Set[int] = set()
+        busy_te: Set[int] = set()
+        for k in range(chromosome.shape[0]):
+            if k in skip:
+                continue
+            if self._slot_id(int(chromosome[k, 0]), int(chromosome[k, 1]), n_times) == sid:
+                taken_r.add(int(chromosome[k, 2]))
+                busy_te.add(int(chromosome[k, 3]))
+        free_r = [rr for rr in range(n_rooms) if rr not in taken_r]
+        allowed_arr = self._allowed_teachers_per_subject[subject_idx]
+        teach_cand = [int(te) for te in allowed_arr if int(te) not in busy_te]
+        if not free_r or not teach_cand:
+            return None
+        return (d, tm, int(rng.choice(free_r)), int(rng.choice(teach_cand)))
+
+    def _try_swap_with_group_mate(
+        self, rng: np.random.Generator, chromosome: np.ndarray, i: int, g: int
+    ) -> bool:
+        """Обмен слотами с другим занятием группы + новые ауд./уч. под каждый предмет (не просто swap строк)."""
+        Tm = len(self.problem.times)
+        R = len(self.problem.rooms)
+        siblings = [j for j in self._classes_by_group[g] if j != i]
+        if not siblings:
+            return False
+        j = int(rng.choice(siblings))
+        sid_i = self._slot_id(int(chromosome[i, 0]), int(chromosome[i, 1]), Tm)
+        sid_j = self._slot_id(int(chromosome[j, 0]), int(chromosome[j, 1]), Tm)
+        if sid_i == sid_j:
+            return False
+        si = int(self.class_subjects_[i])
+        sj = int(self.class_subjects_[j])
+        skip = {i, j}
+        tup_i = self._pick_feasible_tuple_at_slot(rng, chromosome, sid_j, si, skip, Tm, R)
+        if tup_i is None:
+            return False
+        tup_j = self._pick_feasible_tuple_at_slot(rng, chromosome, sid_i, sj, skip, Tm, R)
+        if tup_j is None:
+            return False
+        chromosome[i, 0], chromosome[i, 1], chromosome[i, 2], chromosome[i, 3] = tup_i
+        chromosome[j, 0], chromosome[j, 1], chromosome[j, 2], chromosome[j, 3] = tup_j
+        return True
+
+    def _try_mutate_room_same_slot(
+        self, rng: np.random.Generator, chromosome: np.ndarray, i: int, n_times: int, n_rooms: int
+    ) -> bool:
+        d = int(chromosome[i, 0])
+        t = int(chromosome[i, 1])
+        r_cur = int(chromosome[i, 2])
+        sid = self._slot_id(d, t, n_times)
+        taken: Set[int] = set()
+        for k in range(chromosome.shape[0]):
+            if k == i:
+                continue
+            if self._slot_id(int(chromosome[k, 0]), int(chromosome[k, 1]), n_times) == sid:
+                taken.add(int(chromosome[k, 2]))
+        alternatives = [rr for rr in range(n_rooms) if rr not in taken and rr != r_cur]
+        if not alternatives:
+            return False
+        chromosome[i, 2] = int(rng.choice(alternatives))
+        return True
+
+    def _try_mutate_teacher_same_slot(
+        self, rng: np.random.Generator, chromosome: np.ndarray, i: int, n_times: int
+    ) -> bool:
+        d = int(chromosome[i, 0])
+        t = int(chromosome[i, 1])
+        te_cur = int(chromosome[i, 3])
+        sid = self._slot_id(d, t, n_times)
+        busy_te: Set[int] = set()
+        for k in range(chromosome.shape[0]):
+            if k == i:
+                continue
+            if self._slot_id(int(chromosome[k, 0]), int(chromosome[k, 1]), n_times) == sid:
+                busy_te.add(int(chromosome[k, 3]))
+        s = int(self.class_subjects_[i])
+        allowed_arr = self._allowed_teachers_per_subject[s]
+        candidates = [
+            int(te) for te in allowed_arr if int(te) not in busy_te and int(te) != te_cur
+        ]
+        if not candidates:
+            return False
+        chromosome[i, 3] = int(rng.choice(candidates))
+        return True
+
+    def _try_reslot_gene(
+        self,
+        rng: np.random.Generator,
+        chromosome: np.ndarray,
+        i: int,
+        g: int,
+        n_times: int,
+        n_rooms: int,
+    ) -> bool:
+        """Другой слот группы (день×время), свободный для остальных членов группы + комната и учитель."""
+        sid_old = self._slot_id(int(chromosome[i, 0]), int(chromosome[i, 1]), n_times)
+        used_by_others: Set[int] = set()
+        for j in self._classes_by_group[g]:
+            if j == i:
+                continue
+            used_by_others.add(
+                self._slot_id(int(chromosome[j, 0]), int(chromosome[j, 1]), n_times)
+            )
+        candidates = [
+            int(sid)
+            for sid in self._all_slot_ids
+            if int(sid) not in used_by_others and int(sid) != sid_old
+        ]
+        rng.shuffle(candidates)
+        s = int(self.class_subjects_[i])
+        skip = {i}
+        for sid in candidates:
+            picked = self._pick_feasible_tuple_at_slot(
+                rng, chromosome, sid, s, skip, n_times, n_rooms
+            )
+            if picked is not None:
+                chromosome[i, 0], chromosome[i, 1], chromosome[i, 2], chromosome[i, 3] = picked
+                return True
+        return False
+
+    def _mutate_one_gene_feasible(self, rng: np.random.Generator, chromosome: np.ndarray, i: int) -> bool:
+        """Одно случайное изменение гена с сохранением жёстких ограничений; True если изменили."""
+        g = int(self.class_groups_[i])
+        Tm = len(self.problem.times)
+        R = len(self.problem.rooms)
+        ops = ["swap", "room", "teacher", "reslot"]
+        rng.shuffle(ops)
+        for op in ops:
+            if op == "swap" and self._try_swap_with_group_mate(rng, chromosome, i, g):
+                return True
+            if op == "room" and self._try_mutate_room_same_slot(rng, chromosome, i, Tm, R):
+                return True
+            if op == "teacher" and self._try_mutate_teacher_same_slot(rng, chromosome, i, Tm):
+                return True
+            if op == "reslot" and self._try_reslot_gene(rng, chromosome, i, g, Tm, R):
+                return True
+        return False
 
     @staticmethod
     def _count_conflicts(slots: np.ndarray, n_times: int) -> int:
@@ -295,17 +449,10 @@ class ScheduleOptimizer:
         return child1, child2
 
     def _mutate(self, rng: np.random.Generator, chromosome: np.ndarray, mutation_rate: float) -> None:
-        D = len(self.problem.days)
-        Tm = len(self.problem.times)
-        R = len(self.problem.rooms)
-
+        """Сохраняет жёсткие ограничения: обмен в группе, другая ауд./уч. в том же слоте, перенос слота."""
         for i in range(chromosome.shape[0]):
             if rng.random() < mutation_rate:
-                s = int(self.class_subjects_[i])
-                chromosome[i, 0] = rng.integers(0, D)
-                chromosome[i, 1] = rng.integers(0, Tm)
-                chromosome[i, 2] = rng.integers(0, R)
-                chromosome[i, 3] = rng.choice(self._allowed_teachers_per_subject[s])
+                self._mutate_one_gene_feasible(rng, chromosome, i)
 
     def _local_search(
         self,
@@ -315,33 +462,20 @@ class ScheduleOptimizer:
     ) -> np.ndarray:
         """
         Локальный поиск (hill climbing) после мутации.
-        Делает до max_attempts проб локальных изменений и принимает только улучшающие.
+        Соседи только из допустимых ходов (как в _mutate_one_gene_feasible).
         """
         if max_attempts <= 0:
             return chromosome
 
-        D = len(self.problem.days)
-        Tm = len(self.problem.times)
-        R = len(self.problem.rooms)
-
+        n = chromosome.shape[0]
         current = chromosome.copy()
         current_penalty = self._fitness_penalty(current)
 
         for _ in range(max_attempts):
             neighbor = current.copy()
-
-            i = int(rng.integers(0, neighbor.shape[0]))
-            move_type = int(rng.integers(0, 4))
-
-            if move_type == 0:
-                neighbor[i, 0] = rng.integers(0, D)
-            elif move_type == 1:
-                neighbor[i, 1] = rng.integers(0, Tm)
-            elif move_type == 2:
-                neighbor[i, 2] = rng.integers(0, R)
-            else:
-                s = int(self.class_subjects_[i])
-                neighbor[i, 3] = rng.choice(self._allowed_teachers_per_subject[s])
+            i = int(rng.integers(0, n))
+            if not self._mutate_one_gene_feasible(rng, neighbor, i):
+                continue
 
             neighbor_penalty = self._fitness_penalty(neighbor)
 
