@@ -594,6 +594,7 @@ class ScheduleOptimizer:
         random_seed: Optional[int] = None,
         verbose: bool = True,
         feasible_init_max_restarts: int = 10_000,
+        crossover_repair_attempts: int = 24,
     ) -> "ScheduleOptimizer":
         if pop_size < 2:
             raise ValueError("pop_size must be >= 2")
@@ -605,6 +606,7 @@ class ScheduleOptimizer:
         tournament_size = int(max(2, tournament_size))
         local_search_attempts = int(max(0, local_search_attempts))
         feasible_init_max_restarts = int(max(1, feasible_init_max_restarts))
+        cr_attempts = int(max(4, crossover_repair_attempts))
 
         rng = np.random.default_rng(random_seed)
         population = self._feasible_population(
@@ -649,7 +651,9 @@ class ScheduleOptimizer:
                 parent2 = population[p2]
 
                 if rng.random() < crossover_rate:
-                    child1, child2 = self._crossover(rng, parent1, parent2)
+                          child1, child2 = self._crossover_feasible_light(
+                        rng, parent1, parent2, max_repair_attempts=cr_attempts
+                    )
                 else:
                     child1, child2 = parent1.copy(), parent2.copy()
 
