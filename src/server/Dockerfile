@@ -1,6 +1,12 @@
-FROM python:3.11-slim
+FROM python:3.12.12-slim
 
 WORKDIR /app
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    coinor-cbc \     
+    && rm -rf /var/lib/apt/lists/*
+
+#glpk-utils \
 
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
