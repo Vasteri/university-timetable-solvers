@@ -17,7 +17,9 @@ def hello():
 def solve_pulp(input: InputData):
     r = MyPulp(json_data=input)
     r.solve()
-    return {"result": r.get_json_list()}
+    return {"result": r.get_json_list(),
+            "method": "milp",
+            "status": r.status}
 
 @app.post("/solve_genetic", response_class=ORJSONResponse)
 def solve(input: SolveRequest):

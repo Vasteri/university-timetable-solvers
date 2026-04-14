@@ -20,7 +20,9 @@ public:
     explicit GlobalDataTransition(QObject* parent = nullptr);
     ~GlobalDataTransition();
     void SetData(const QJsonObject& obj);
+    void SetDataResult(const QJsonObject& obj);
     void SendData(const QJsonObject& extra = QJsonObject());
+
     QJsonObject GetData() const {return output_data;};
 
 signals:

@@ -32,6 +32,9 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         inputdata.h inputdata.cpp inputdata.ui
         reshator.h reshator.cpp reshator.ui
         globaldatatransition.h globaldatatransition.cpp
+        outputdata.h outputdata.cpp outputdata.ui
+
+
 
     )
 # Define target properties for Android with Qt 6 as:

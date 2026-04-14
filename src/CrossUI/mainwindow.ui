@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>550</width>
-    <height>500</height>
+    <width>734</width>
+    <height>529</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -28,13 +28,15 @@
       </widget>
       <widget class="QWidget" name="tab">
        <attribute name="title">
-        <string>Настройка соединения</string>
+        <string>Решить</string>
        </attribute>
-       <layout class="QGridLayout" name="gridLayout">
-        <item row="0" column="0">
-         <layout class="QVBoxLayout" name="verticalLayout"/>
-        </item>
-       </layout>
+       <layout class="QGridLayout" name="gridLayout"/>
+      </widget>
+      <widget class="QWidget" name="tab_5">
+       <attribute name="title">
+        <string>Результаты</string>
+       </attribute>
+       <layout class="QGridLayout" name="gridLayout_7"/>
       </widget>
       <widget class="QWidget" name="tab_2">
        <attribute name="title">
@@ -57,8 +59,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>550</width>
-     <height>21</height>
+     <width>734</width>
+     <height>23</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu">

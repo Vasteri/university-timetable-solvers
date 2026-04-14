@@ -156,7 +156,7 @@ def test_ga_solver():
     print("class_subjects_:", ga.class_subjects_, '\n')
     print("allowed_:", ga.allowed_, '\n')
     print("_allowed_teachers_per_subject:\n", ga._allowed_teachers_per_subject, '\n')
-    sced = ga._random_population(np.random.default_rng(2), 2)
+    sced = ga._build_feasible_chromosome(np.random.default_rng(2), 10_000)
     print("polupation:", sced.shape, sced)
     """
     params = GAParams()

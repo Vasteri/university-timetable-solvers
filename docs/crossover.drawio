@@ -1,0 +1,72 @@
+<mxfile host="65bd71144e">
+    <diagram name="Кроссинговер" id="crossover">
+        <mxGraphModel dx="606" dy="675" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="start" value="Родитель 1 и Родитель 2" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" parent="1" vertex="1">
+                    <mxGeometry x="300" y="60" width="180" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="choose" value="Выбрать две случайные группы&amp;nbsp;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
+                    <mxGeometry x="280" y="140" width="220" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="arrow1" parent="1" source="start" target="choose" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="copy" value="Создать копии: child1 = parent1, child2 = parent2" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
+                    <mxGeometry x="270" y="220" width="240" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="arrow2" parent="1" source="choose" target="copy" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="swap" value="Поменять местами группы во всём расписании: child1, child2" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
+                    <mxGeometry x="260" y="300" width="260" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="arrow3" parent="1" source="copy" target="swap" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="repair" value="Ремонт (устранение конфликтов)&#xa;– несколько попыток мутации в подмешанных генах" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
+                    <mxGeometry x="260" y="390" width="260" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="arrow4" parent="1" source="swap" target="repair" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="check" value="Жёсткие ограничения соблюдены?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" parent="1" vertex="1">
+                    <mxGeometry x="325" y="470" width="130" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="arrow5" parent="1" source="repair" target="check" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="ok" value="Да" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="arrow5" vertex="1" connectable="0">
+                    <mxGeometry x="-0.2" y="1" relative="1" as="geometry">
+                        <mxPoint x="-11" y="98" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="return" value="Вернуть child1, child2" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" parent="1" vertex="1">
+                    <mxGeometry x="330" y="580" width="120" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="arrowOk" parent="1" source="check" target="return" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="no" value="Нет" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="arrowOk" vertex="1" connectable="0">
+                    <mxGeometry x="-0.2" y="1" relative="1" as="geometry">
+                        <mxPoint x="79" y="-64" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="fallback" value="Заменить на копию родителя" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" parent="1" vertex="1">
+                    <mxGeometry x="500" y="480" width="150" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="arrowNo" parent="1" source="check" target="fallback" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="fallbackReturn" parent="1" source="fallback" target="return" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="575" y="600"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>
