@@ -1,0 +1,76 @@
+<mxfile host="65bd71144e">
+    <diagram name="Teacher операция" id="teacher">
+        <mxGraphModel dx="606" dy="675" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="start" value="Ген (занятие)&lt;br&gt;содержит (day, time, room, teacher)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" parent="1" vertex="1">
+                    <mxGeometry x="280" y="130" width="220" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="busyTeachers" value="Найти всех учителей, занятых в это же слоте&lt;br&gt;(кроме текущего гена)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
+                    <mxGeometry x="260" y="210" width="260" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="arrow2" parent="1" source="start" target="busyTeachers" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="390" y="260" as="sourcePoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="allowed" value="Взять список допустимых учителей для предмета" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
+                    <mxGeometry x="270" y="290" width="240" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="arrow3" parent="1" source="busyTeachers" target="allowed" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="candidates" value="Отфильтровать: только допустимые и не занятые&#xa;(исключая текущего учителя)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
+                    <mxGeometry x="250" y="370" width="280" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="arrow4" parent="1" source="allowed" target="candidates" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="check" value="Есть кандидаты?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" parent="1" vertex="1">
+                    <mxGeometry x="325" y="460" width="130" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="arrow5" parent="1" source="candidates" target="check" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="yes" value="Да" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="arrow5" vertex="1" connectable="0">
+                    <mxGeometry x="-0.2" y="1" relative="1" as="geometry">
+                        <mxPoint x="-15" y="104" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="choose" value="Выбрать случайного учителя из кандидатов" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
+                    <mxGeometry x="300" y="570" width="180" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="arrowYes" parent="1" source="check" target="choose" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="update" value="Обновить поле teacher гена&amp;nbsp;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
+                    <mxGeometry x="310" y="650" width="160" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="arrowUpd" parent="1" source="choose" target="update" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="returnTrue" value="Конец" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" parent="1" vertex="1">
+                    <mxGeometry x="340" y="730" width="100" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="arrowRet" parent="1" source="update" target="returnTrue" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="no" value="Нет" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="arrowRet" vertex="1" connectable="0">
+                    <mxGeometry x="-0.2" y="1" relative="1" as="geometry">
+                        <mxPoint x="79" y="-226" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="arrowNo" parent="1" source="check" target="returnTrue" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="500" y="490"/>
+                            <mxPoint x="500" y="710"/>
+                            <mxPoint x="390" y="710"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

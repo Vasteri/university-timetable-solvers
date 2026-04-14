@@ -140,8 +140,43 @@ def create_default_json():
 
     print("Файл data.json успешно сохранён!")
 
+def test_ga_solver():
+    from ga_solver import ScheduleOptimizer
+    from schemas import GAParams, InputData
+    import json
+    import numpy as np
+
+
+    with open("../../tests/input_10.json", "r") as file:
+        raw = json.load(file)
+
+    ga = ScheduleOptimizer(raw)
+
+    print("class_groups_:", ga.class_groups_, '\n')
+    print("class_subjects_:", ga.class_subjects_, '\n')
+    print("allowed_:", ga.allowed_, '\n')
+    print("_allowed_teachers_per_subject:\n", ga._allowed_teachers_per_subject, '\n')
+    sced = ga._build_feasible_chromosome(np.random.default_rng(2), 10_000)
+    print("polupation:", sced.shape, sced)
+    """
+    params = GAParams()
+    opt = ScheduleOptimizer(raw).fit(
+        pop_size=params.pop_size,
+        generations=params.generations,
+        crossover_rate=params.crossover_rate,
+        mutation_rate=params.mutation_rate,
+        elite_size=params.elite_size,
+        tournament_size=params.tournament_size,
+        local_search_rate=params.local_search_rate,
+        local_search_attempts=params.local_search_attempts,
+        random_seed=params.seed,
+        verbose=params.verbose,
+    )
+    """
+
 
 
 #test_pulp()
-test_server()
+#test_server()
 #create_default_json()
+test_ga_solver()

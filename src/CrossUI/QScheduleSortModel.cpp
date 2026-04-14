@@ -14,7 +14,8 @@ protected:
 
         // Список дней недели в нужном порядке
         static const QStringList dayOrder = {
-            "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"
+            "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday",
+            "2_Monday", "2_Tuesday", "2_Wednesday", "2_Thursday", "2_Friday", "2_Saturday", "2_Sunday"
         };
         QString header = sourceModel()->headerData(left.column(), Qt::Horizontal).toString();
 

@@ -1,0 +1,113 @@
+<mxfile host="65bd71144e">
+    <diagram name="Генерация хромосомы" id="init">
+        <mxGraphModel dx="606" dy="675" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="start" value="Начало: пустая хромосома (n×4)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" parent="1" vertex="1">
+                    <mxGeometry x="300" y="60" width="180" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="shuffleGroups" value="Перемешать порядок групп" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
+                    <mxGeometry x="310" y="140" width="160" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="arrow1" parent="1" source="start" target="shuffleGroups" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="groupLoop" value="Для каждой группы" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" parent="1" vertex="1">
+                    <mxGeometry x="320" y="210" width="140" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="arrow2" parent="1" source="shuffleGroups" target="groupLoop" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="shuffleLessons" value="Перемешать занятия группы" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
+                    <mxGeometry x="310" y="310" width="160" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="arrow3" parent="1" source="groupLoop" target="shuffleLessons" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="4" value="" style="edgeStyle=none;html=1;" edge="1" parent="1" source="lessonLoop" target="groupLoop">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="280" y="420"/>
+                            <mxPoint x="280" y="240"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="lessonLoop" value="Для каждого занятия" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" parent="1" vertex="1">
+                    <mxGeometry x="320" y="390" width="140" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="arrow4" parent="1" source="shuffleLessons" target="lessonLoop" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="assign" value="Выбрать слот, аудиторию, учителя&#xa;(с учётом занятости)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
+                    <mxGeometry x="300" y="480" width="180" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="arrow5" parent="1" source="lessonLoop" target="assign" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="success" value="Успешно?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" parent="1" vertex="1">
+                    <mxGeometry x="345" y="560" width="90" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="arrow6" parent="1" source="assign" target="success" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="yes" value="Да" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="arrow6" vertex="1" connectable="0">
+                    <mxGeometry x="-0.2" y="1" relative="1" as="geometry">
+                        <mxPoint x="59" y="38" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="nextLesson" value="Записать в хромосому" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
+                    <mxGeometry x="470" y="570" width="140" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="arrowYes" parent="1" source="success" target="nextLesson" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="no" value="Нет" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="arrowYes" vertex="1" connectable="0">
+                    <mxGeometry x="-0.2" y="1" relative="1" as="geometry">
+                        <mxPoint x="-81" y="51" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="fail" value="Перезапустить всю особь" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" parent="1" vertex="1">
+                    <mxGeometry x="320" y="670" width="140" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="arrowNo" parent="1" source="success" target="fail" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="restartBack" parent="1" source="fail" target="shuffleGroups" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="240" y="690"/>
+                            <mxPoint x="240" y="160"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="loopBack" parent="1" source="nextLesson" target="lessonLoop" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="540" y="420"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="arrowGroupLoop" parent="1" source="groupLoop" target="end" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="630" y="240"/>
+                            <mxPoint x="630" y="730"/>
+                            <mxPoint x="390" y="730"/>
+                        </Array>
+                        <mxPoint x="730" y="240" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="end" value="Хромосома готова" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" parent="1" vertex="1">
+                    <mxGeometry x="310" y="760" width="160" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="5" value="Конец" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+                    <mxGeometry x="450" y="210" width="60" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="6" value="Конец" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+                    <mxGeometry x="280" y="390" width="60" height="30" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

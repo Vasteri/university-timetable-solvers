@@ -33,6 +33,10 @@ void GlobalDataTransition::SetData(const QJsonObject& obj) {
     input_data = obj;
 }
 
+void GlobalDataTransition::SetDataResult(const QJsonObject& obj) {
+    output_data = obj;
+}
+
 void GlobalDataTransition::SendData(const QJsonObject& extra) {
     if (!input_data.isEmpty()) {
         message = "Запрос...";

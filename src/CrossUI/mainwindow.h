@@ -7,6 +7,7 @@
 #include "inputdata.h"
 #include "reshator.h"
 #include "globaldatatransition.h"
+#include "outputdata.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -27,6 +28,7 @@ private:
     Graphic *graphic;
     Tablish *tablish;
     InputData *input_data;
+    OutputData *output_data;
     Reshator *reshator;
     Ui::MainWindow *ui;
 };
