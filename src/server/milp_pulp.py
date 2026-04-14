@@ -14,6 +14,7 @@ class MyPulp:
         self.names = ["groups", "subjects", "days", "times", "rooms", "teachers"]
         self.assigned = list()
         self.problem = LpProblem("University_Timetable", LpMinimize)
+        self.status = "Ready to start"
         self._init_variables()
         self._init_objective_function()
         self._init_constraints()
@@ -312,8 +313,9 @@ class MyPulp:
 
     def solve(self):
         print("Solving...")
-        status = self.problem.solve(PULP_CBC_CMD(msg=True))
-        print("Status:", LpStatus[self.problem.status])
+        self.problem.solve(PULP_CBC_CMD(msg=True))
+        self.status = LpStatus[self.problem.status]
+        print("Status:", self.status)
 
         self.assigned = []
         for key, var in self.x.items():

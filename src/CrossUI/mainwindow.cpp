@@ -10,13 +10,15 @@ MainWindow::MainWindow(QWidget *parent)
     graphic = new Graphic(this, data);
     tablish = new Tablish(this, data);
     input_data = new InputData(this, data);
+    output_data = new OutputData(this, data);
     reshator = new Reshator(this, data);
 
     //this->setCentralWidget(graphic);
     ui->tabWidget->widget(0)->layout()->addWidget(input_data);
     ui->tabWidget->widget(1)->layout()->addWidget(reshator);
-    ui->tabWidget->widget(2)->layout()->addWidget(graphic);
-    ui->tabWidget->widget(3)->layout()->addWidget(tablish);
+    ui->tabWidget->widget(2)->layout()->addWidget(output_data);
+    ui->tabWidget->widget(3)->layout()->addWidget(graphic);
+    ui->tabWidget->widget(4)->layout()->addWidget(tablish);
 }
 
 MainWindow::~MainWindow()
